@@ -125,7 +125,7 @@ public class DetectorActivity extends CameraActivity implements OnImageAvailable
         widthofSurfaceView = width;
         heightofSurfaceView = height;
         boundRect = rectf;
-//        apiService = APIServiceFactory.getRetrofit().create(ApiService.class);
+        apiService = APIServiceFactory.getRetrofit().create(ApiService.class);
 
         facesBitmap = new ArrayList<>();
 
@@ -466,7 +466,7 @@ public class DetectorActivity extends CameraActivity implements OnImageAvailable
             runOnUiThread(new Runnable() {
                 @Override
                 public void run() {
-//                    getFaceresult(getBase64String(faceCroped));
+                    getFaceresult(getBase64String(faceCroped));
                 }
             });
         }
