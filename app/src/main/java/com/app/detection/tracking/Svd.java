@@ -1,8 +1,10 @@
 package com.app.detection.tracking;
 
-import org.ejml.data.DenseMatrix64F;
-import org.ejml.factory.DecompositionFactory;
-import org.ejml.interfaces.decomposition.SingularValueDecomposition;
+
+
+import com.app.detection.Svd.DecompositionFactory;
+import com.app.detection.Svd.DenseMatrix64F;
+import com.app.detection.Svd.SingularValueDecomposition;
 
 import java.text.DecimalFormat;
 import java.util.ArrayList;
