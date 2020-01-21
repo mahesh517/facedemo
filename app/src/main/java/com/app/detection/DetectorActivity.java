@@ -29,15 +29,15 @@ import androidx.annotation.RequiresApi;
 import com.app.detection.ResponseModel.FaceSearchResponse;
 import com.app.detection.model.AddUserResponse;
 import com.app.detection.model.ManualAddUser;
-import com.app.detection.org.opencv.android.Utils;
-import com.app.detection.org.opencv.core.Mat;
-import com.app.detection.org.opencv.imgproc.Imgproc;
 import com.google.gson.Gson;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 
 import org.json.JSONException;
 import org.json.JSONObject;
+import org.opencv.android.Utils;
+import org.opencv.core.Mat;
+import org.opencv.imgproc.Imgproc;
 
 import com.app.detection.ServiceApi.APIServiceFactory;
 import com.app.detection.ServiceApi.ApiService;
@@ -438,7 +438,7 @@ public class DetectorActivity extends CameraActivity implements OnImageAvailable
                 byte[] return_buff = new byte[(int) (src.total() * src.channels())];
                 src.get(0, 0, return_buff);
                 Mat resizeimage = new Mat();
-                com.app.detection.org.opencv.core.Size sz = new com.app.detection.org.opencv.core.Size(32, 32);
+                org.opencv.core.Size sz = new org.opencv.core.Size(32, 32);
                 Imgproc.resize(src, resizeimage, sz);
 
                 double[][] mat_double = new double[resizeimage.width()][resizeimage.height()];
