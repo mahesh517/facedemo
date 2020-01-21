@@ -11,7 +11,14 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="a76501db-07d4-4293-a302-5150e4fcd8ed" name="Default Changelist" comment="">
+      <change afterPath="$PROJECT_DIR$/app/src/main/java/com/app/detection/FaceDetection.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.gradle/5.4.1/executionHistory/executionHistory.bin" beforeDir="false" afterPath="$PROJECT_DIR$/.gradle/5.4.1/executionHistory/executionHistory.bin" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.gradle/5.4.1/executionHistory/executionHistory.lock" beforeDir="false" afterPath="$PROJECT_DIR$/.gradle/5.4.1/executionHistory/executionHistory.lock" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.gradle/5.4.1/fileHashes/fileHashes.bin" beforeDir="false" afterPath="$PROJECT_DIR$/.gradle/5.4.1/fileHashes/fileHashes.bin" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.gradle/5.4.1/fileHashes/fileHashes.lock" beforeDir="false" afterPath="$PROJECT_DIR$/.gradle/5.4.1/fileHashes/fileHashes.lock" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.gradle/buildOutputCleanup/buildOutputCleanup.lock" beforeDir="false" afterPath="$PROJECT_DIR$/.gradle/buildOutputCleanup/buildOutputCleanup.lock" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/src/main/java/com/app/detection/DetectorActivity.java" beforeDir="false" afterPath="$PROJECT_DIR$/app/src/main/java/com/app/detection/DetectorActivity.java" afterDir="false" />
     </list>
     <ignored path="$PROJECT_DIR$/build/" />
     <ignored path="$PROJECT_DIR$/out/" />
@@ -32,7 +39,6 @@
   <component name="DefaultGradleProjectSettings">
     <option name="isMigrated" value="true" />
   </component>
-  <component name="ExecutionTargetManager" SELECTED_TARGET="qcv4rwg6jzscy9v4" />
   <component name="ExternalProjectsData">
     <projectState path="$PROJECT_DIR$">
       <ProjectState />
@@ -87,38 +93,30 @@
       <file pinned="false" current-in-tab="false">
         <entry file="file://$PROJECT_DIR$/app/build.gradle">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="736">
+            <state relative-caret-position="748">
               <caret line="44" column="24" selection-start-line="44" selection-start-column="24" selection-end-line="44" selection-end-column="24" />
             </state>
           </provider>
         </entry>
       </file>
-      <file pinned="false" current-in-tab="false">
-        <entry file="file://$PROJECT_DIR$/app/src/main/java/com/app/detection/org/opencv/core/Core.java">
+      <file pinned="false" current-in-tab="true">
+        <entry file="file://$PROJECT_DIR$/app/src/main/java/com/app/detection/DetectorActivity.java">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="149">
-              <caret line="246" column="35" lean-forward="true" selection-start-line="246" selection-start-column="35" selection-end-line="246" selection-end-column="35" />
-            </state>
-          </provider>
-        </entry>
-      </file>
-      <file pinned="false" current-in-tab="false">
-        <entry file="file://$PROJECT_DIR$/app/src/main/java/com/app/detection/org/opencv/android/AsyncServiceHelper.java">
-          <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="309">
-              <caret line="257" column="22" lean-forward="true" selection-start-line="257" selection-start-column="22" selection-end-line="257" selection-end-column="22" />
+            <state relative-caret-position="319">
+              <caret line="149" column="27" selection-start-line="149" selection-start-column="27" selection-end-line="149" selection-end-column="27" />
               <folding>
-                <element signature="imports" expanded="true" />
+                <element signature="e#19730#19731#0" expanded="true" />
+                <element signature="e#19824#19825#0" expanded="true" />
               </folding>
             </state>
           </provider>
         </entry>
       </file>
-      <file pinned="false" current-in-tab="true">
-        <entry file="file://$PROJECT_DIR$/app/src/main/java/com/app/detection/org/opencv/android/StaticHelper.java">
+      <file pinned="false" current-in-tab="false">
+        <entry file="file://$PROJECT_DIR$/app/src/main/java/com/app/detection/FaceDetection.java">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="268">
-              <caret line="28" column="43" selection-start-line="28" selection-start-column="32" selection-end-line="28" selection-end-column="43" />
+            <state relative-caret-position="238">
+              <caret line="14" column="57" selection-start-line="14" selection-start-column="57" selection-end-line="14" selection-end-column="57" />
               <folding>
                 <element signature="imports" expanded="true" />
               </folding>
@@ -137,7 +135,6 @@
   </component>
   <component name="FindInProjectRecents">
     <findStrings>
-      <find>com.app.detection.org.opencv.org.opencv</find>
       <find>onreq</find>
       <find>org.ejml</find>
       <find>com.app.detection.com.app.detection.org</find>
@@ -167,6 +164,7 @@
       <find>OpenCVManager/Helper</find>
       <find>OpenCV/StaticHelper</find>
       <find>Opencv</find>
+      <find>check</find>
     </findStrings>
     <replaceStrings>
       <replace>com.app.detection.org.opencv</replace>
@@ -182,9 +180,6 @@
   <component name="IdeDocumentHistory">
     <option name="CHANGED_PATHS">
       <list>
-        <option value="$PROJECT_DIR$/app/src/main/java/com/app/detection/ejml/alg/dense/misc/TransposeAlgs.java" />
-        <option value="$PROJECT_DIR$/app/src/main/java/com/app/detection/ejml/alg/dense/misc/ImplCommonOps_DenseMatrix64F.java" />
-        <option value="$PROJECT_DIR$/app/src/main/java/com/app/detection/ejml/alg/dense/misc/ImplCommonOps_Matrix64F.java" />
         <option value="$PROJECT_DIR$/app/src/main/java/com/app/detection/ejml/alg/dense/linsol/lu/LinearSolverLuBase_D64.java" />
         <option value="$PROJECT_DIR$/app/src/main/java/com/app/detection/ejml/alg/dense/mult/CVectorVectorMult.java" />
         <option value="$PROJECT_DIR$/app/src/main/java/com/app/detection/ejml/ops/CSpecializedOps.java" />
@@ -233,6 +228,9 @@
         <option value="$PROJECT_DIR$/app/src/main/java/com/app/detection/org/opencv/android/CameraBridgeViewBase.java" />
         <option value="$PROJECT_DIR$/app/src/main/java/com/app/detection/org/opencv/BuildConfig.java" />
         <option value="$PROJECT_DIR$/app/build.gradle" />
+        <option value="$PROJECT_DIR$/app/src/main/AndroidManifest.xml" />
+        <option value="$PROJECT_DIR$/app/src/main/java/com/app/detection/FaceDetection.java" />
+        <option value="$PROJECT_DIR$/app/src/main/java/com/app/detection/DetectorActivity.java" />
       </list>
     </option>
   </component>
@@ -250,8 +248,6 @@
       <foldersAlwaysOnTop value="true" />
     </navigator>
     <panes>
-      <pane id="Scope" />
-      <pane id="PackagesPane" />
       <pane id="ProjectPane">
         <subPane>
           <expand>
@@ -263,7 +259,9 @@
           <select />
         </subPane>
       </pane>
+      <pane id="Scope" />
       <pane id="AndroidView" />
+      <pane id="PackagesPane" />
     </panes>
   </component>
   <component name="PropertiesComponent">
@@ -440,15 +438,21 @@
       <option name="project" value="LOCAL" />
       <updated>1579513515907</updated>
     </task>
-    <option name="localTasksCounter" value="4" />
+    <task id="LOCAL-00004" summary="#manifest update">
+      <created>1579516435646</created>
+      <option name="number" value="00004" />
+      <option name="presentableId" value="LOCAL-00004" />
+      <option name="project" value="LOCAL" />
+      <updated>1579516435647</updated>
+    </task>
+    <option name="localTasksCounter" value="5" />
     <servers />
   </component>
   <component name="ToolWindowManager">
     <frame x="-8" y="-8" width="1320" height="784" extended-state="6" />
-    <editor active="true" />
     <layout>
       <window_info id="Captures" order="0" side_tool="true" weight="0.25" />
-      <window_info content_ui="combo" id="Project" order="1" visible="true" weight="0.31984127" />
+      <window_info active="true" content_ui="combo" id="Project" order="1" visible="true" weight="0.31984127" />
       <window_info id="Structure" order="2" side_tool="true" />
       <window_info id="Favorites" order="3" side_tool="true" />
       <window_info id="Build Variants" order="4" side_tool="true" />
@@ -464,7 +468,7 @@
       <window_info anchor="bottom" id="Event Log" order="5" side_tool="true" />
       <window_info anchor="bottom" id="Version Control" order="6" />
       <window_info anchor="bottom" id="Build" order="7" weight="0.32872504" />
-      <window_info anchor="bottom" id="Android Profiler" order="8" />
+      <window_info anchor="bottom" id="Android Profiler" order="8" show_stripe_button="false" />
       <window_info anchor="bottom" id="Find" order="9" weight="0.3289689" />
       <window_info anchor="right" id="Vector Thumnails" order="0" />
       <window_info anchor="right" id="Device File Explorer" order="1" side_tool="true" />
@@ -482,12 +486,10 @@
     <MESSAGE value="#full_source_code" />
     <MESSAGE value="#api_call" />
     <MESSAGE value="#svd library update" />
-    <option name="LAST_COMMIT_MESSAGE" value="#svd library update" />
+    <MESSAGE value="#manifest update" />
+    <option name="LAST_COMMIT_MESSAGE" value="#manifest update" />
   </component>
   <component name="editorHistoryManager">
-    <entry file="file://$PROJECT_DIR$/app/src/main/java/com/app/detection/ejml/alg/block/decomposition/chol/CholeskyOuterForm_B64.java" />
-    <entry file="file://$PROJECT_DIR$/app/src/main/java/com/app/detection/ejml/ops/CovarianceOps.java" />
-    <entry file="file://$PROJECT_DIR$/app/src/main/java/com/app/detection/ejml/ops/CovarianceRandomDraw.java" />
     <entry file="file://$PROJECT_DIR$/app/src/main/java/com/app/detection/ejml/alg/dense/decomposition/chol/CholeskyDecompositionInner_D64.java" />
     <entry file="file://$PROJECT_DIR$/app/src/main/java/com/app/detection/ejml/simple/SimpleBase.java" />
     <entry file="file://$PROJECT_DIR$/app/src/main/java/com/app/detection/ejml/simple/SimpleMatrix.java" />
@@ -590,16 +592,7 @@
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/app/src/main/java/com/app/detection/org/opencv/engine/OpenCVEngineInterface.java">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="-76">
-          <caret line="59" column="33" selection-start-line="59" selection-start-column="23" selection-end-line="59" selection-end-column="33" />
-          <folding>
-            <element signature="imports" expanded="true" />
-          </folding>
-        </state>
-      </provider>
-    </entry>
+    <entry file="file://$PROJECT_DIR$/app/src/main/java/com/app/detection/org/opencv/engine/OpenCVEngineInterface.java" />
     <entry file="file://$PROJECT_DIR$/app/src/main/res/mipmap-xxxhdpi/ic_launcher.png">
       <provider selected="true" editor-type-id="images" />
     </entry>
@@ -676,30 +669,6 @@
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/app/build.gradle">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="736">
-          <caret line="44" column="24" selection-start-line="44" selection-start-column="24" selection-end-line="44" selection-end-column="24" />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/app/src/main/java/com/app/detection/org/opencv/core/Core.java">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="149">
-          <caret line="246" column="35" lean-forward="true" selection-start-line="246" selection-start-column="35" selection-end-line="246" selection-end-column="35" />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/app/src/main/java/com/app/detection/org/opencv/android/AsyncServiceHelper.java">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="309">
-          <caret line="257" column="22" lean-forward="true" selection-start-line="257" selection-start-column="22" selection-end-line="257" selection-end-column="22" />
-          <folding>
-            <element signature="imports" expanded="true" />
-          </folding>
-        </state>
-      </provider>
-    </entry>
     <entry file="jar://$USER_HOME$/AppData/Local/Android/sdk/platforms/android-28/android.jar!/java/lang/System.class">
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="439">
@@ -707,12 +676,65 @@
         </state>
       </provider>
     </entry>
+    <entry file="file://$PROJECT_DIR$/app/src/main/AndroidManifest.xml">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="289">
+          <caret line="17" column="42" selection-start-line="17" selection-start-column="42" selection-end-line="17" selection-end-column="42" />
+        </state>
+      </provider>
+      <provider editor-type-id="android-manifest" />
+    </entry>
     <entry file="file://$PROJECT_DIR$/app/src/main/java/com/app/detection/org/opencv/android/StaticHelper.java">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="268">
-          <caret line="28" column="43" selection-start-line="28" selection-start-column="32" selection-end-line="28" selection-end-column="43" />
+        <state relative-caret-position="-412">
+          <caret line="30" column="4" selection-start-line="30" selection-start-column="4" selection-end-line="30" selection-end-column="4" />
           <folding>
             <element signature="imports" expanded="true" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/app/src/main/java/com/app/detection/org/opencv/android/AsyncServiceHelper.java">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="309">
+          <caret line="257" column="22" selection-start-line="257" selection-start-column="22" selection-end-line="257" selection-end-column="22" />
+          <folding>
+            <element signature="imports" expanded="true" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/app/src/main/java/com/app/detection/org/opencv/core/Core.java">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="166">
+          <caret line="247" column="5" lean-forward="true" selection-start-line="247" selection-start-column="5" selection-end-line="247" selection-end-column="5" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/app/build.gradle">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="748">
+          <caret line="44" column="24" selection-start-line="44" selection-start-column="24" selection-end-line="44" selection-end-column="24" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/app/src/main/java/com/app/detection/FaceDetection.java">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="238">
+          <caret line="14" column="57" selection-start-line="14" selection-start-column="57" selection-end-line="14" selection-end-column="57" />
+          <folding>
+            <element signature="imports" expanded="true" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/app/src/main/java/com/app/detection/DetectorActivity.java">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="319">
+          <caret line="149" column="27" selection-start-line="149" selection-start-column="27" selection-end-line="149" selection-end-column="27" />
+          <folding>
+            <element signature="e#19730#19731#0" expanded="true" />
+            <element signature="e#19824#19825#0" expanded="true" />
           </folding>
         </state>
       </provider>

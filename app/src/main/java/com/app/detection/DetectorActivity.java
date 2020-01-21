@@ -3,6 +3,7 @@
 package com.app.detection;
 
 import android.content.Context;
+import android.content.Intent;
 import android.graphics.Bitmap;
 import android.graphics.Bitmap.Config;
 import android.graphics.Canvas;
@@ -26,6 +27,8 @@ import android.widget.Toast;
 import androidx.annotation.RequiresApi;
 
 import com.app.detection.ResponseModel.FaceSearchResponse;
+import com.app.detection.model.AddUserResponse;
+import com.app.detection.model.ManualAddUser;
 import com.app.detection.org.opencv.android.Utils;
 import com.app.detection.org.opencv.core.Mat;
 import com.app.detection.org.opencv.imgproc.Imgproc;
@@ -52,6 +55,8 @@ import com.app.detection.tracking.Svd;
 
 import java.io.ByteArrayOutputStream;
 import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.io.InputStream;
@@ -64,6 +69,9 @@ import java.util.Collections;
 import java.util.LinkedList;
 import java.util.List;
 
+import okhttp3.MediaType;
+import okhttp3.MultipartBody;
+import okhttp3.RequestBody;
 import retrofit2.Call;
 import retrofit2.Callback;
 import retrofit2.Response;
@@ -132,9 +140,16 @@ public class DetectorActivity extends CameraActivity implements OnImageAvailable
         tracker = new MultiBoxTracker(this);
 
 
-//        fileObject = getJSONResource(DetectorActivity.this);
+        fileObject = getJSONResource(DetectorActivity.this);
 
-//        Log.e("JsonObject", fileObject.toString());
+
+        if (fileObject == null) {
+
+            callBlankFragment();
+
+            Toast.makeText(this, "Please add your admin json file", Toast.LENGTH_SHORT).show();
+
+        }
         int cropSize = TF_OD_API_INPUT_SIZE;
 
         try {
@@ -466,7 +481,7 @@ public class DetectorActivity extends CameraActivity implements OnImageAvailable
             runOnUiThread(new Runnable() {
                 @Override
                 public void run() {
-                    getFaceresult(getBase64String(faceCroped));
+                    getFaceresult(getBase64String(faceCroped), faceCroped);
                 }
             });
         }
@@ -481,7 +496,7 @@ public class DetectorActivity extends CameraActivity implements OnImageAvailable
     }
 
 
-    public void getFaceresult(String base64String) {
+    public void getFaceresult(String base64String, Bitmap faceCroped) {
         try {
 
             SearchHeaderr searchHeaderr = new SearchHeaderr();
@@ -547,9 +562,10 @@ public class DetectorActivity extends CameraActivity implements OnImageAvailable
                         }
                     } else {
 
+
+                        sendDetails(createfile(faceCroped));
                         Toast.makeText(DetectorActivity.this, "" + response.body().getMessage(), Toast.LENGTH_SHORT).show();
 
-                        setFragment();
 
                     }
                 }
@@ -692,7 +708,120 @@ public class DetectorActivity extends CameraActivity implements OnImageAvailable
             return parser.parse(new InputStreamReader(is)).getAsJsonObject();
         } catch (Exception e) {
             Log.e(TAG, e.getMessage(), e);
+
         }
         return null;
     }
+
+    private File createfile(Bitmap bitmp) {
+        File f = new File(getCacheDir(), System.currentTimeMillis() + ".jpg");
+        try {
+            f.createNewFile();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        Bitmap bitmap = bitmp;
+        ByteArrayOutputStream bos = new ByteArrayOutputStream();
+        bitmap.compress(Bitmap.CompressFormat.JPEG, 100 /*ignored for PNG*/, bos);
+        byte[] bitmapdata = bos.toByteArray();
+
+        FileOutputStream fos = null;
+        try {
+            fos = new FileOutputStream(f);
+        } catch (FileNotFoundException e) {
+            e.printStackTrace();
+        }
+        try {
+            fos.write(bitmapdata);
+            fos.flush();
+            fos.close();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        return f;
+    }
+
+
+    private MultipartBody.Part prepareFilePart(String imagePth) {
+        File file = new File(imagePth);
+        RequestBody requestFile = RequestBody.create(MediaType.parse("image/*"), file);
+        return MultipartBody.Part.createFormData("image", file.getName(), requestFile);
+    }
+
+
+    private void sendDetails(File file) {
+        try {
+
+
+            RequestBody user_id = RequestBody.create(MediaType.parse("multipart/form-data"), "5d0a8ef72ad9c04228140739");
+            apiService.addNewUser(prepareFilePart(file.getAbsolutePath()), user_id).enqueue(new Callback<ManualAddUser>() {
+                @Override
+                public void onResponse(Call<ManualAddUser> call, Response<ManualAddUser> response) {
+                    try {
+                        setFragment();
+                    } catch (Exception e) {
+                        Log.e("Exception", e.getMessage());
+                    }
+                }
+
+                @Override
+                public void onFailure(Call<ManualAddUser> call, Throwable t) {
+                    try {
+
+                        setFragment();
+                    } catch (Exception e) {
+                    }
+                }
+            });
+        } catch (Exception e) {
+        }
+    }
+
+
+    public void sendDetails(String imagePath, String username) {
+        try {
+
+            RequestBody user_id = RequestBody.create(MediaType.parse("multipart/form-data"), "5d0a8ef72ad9c04228140739");
+            RequestBody name = RequestBody.create(MediaType.parse("multipart/form-data"), username);
+
+
+            apiService.saveNewUser(prepareFilePart(imagePath), name, user_id).enqueue(new Callback<AddUserResponse>() {
+                @Override
+                public void onResponse(Call<AddUserResponse> call, Response<AddUserResponse> response) {
+
+
+                    Log.e("path", imagePath);
+                    Log.e("response", new Gson().toJson(response.body()));
+                    Log.e("code", new Gson().toJson(response.raw().code()));
+
+                    if (response.raw().code() == 200 && response.body().getStatus().equalsIgnoreCase("ok")) {
+
+                        Toast.makeText(DetectorActivity.this, "" + response.body().getMessage(), Toast.LENGTH_SHORT).show();
+
+                        startActivity(new Intent(DetectorActivity.this, DetectorActivity.class));
+                        finish();
+                    } else {
+                        Toast.makeText(DetectorActivity.this, "Fail :" + response.body().getMessage(), Toast.LENGTH_SHORT).show();
+                    }
+
+                }
+
+                @Override
+                public void onFailure(Call<AddUserResponse> call, Throwable t) {
+
+                    try {
+                        Toast.makeText(DetectorActivity.this, "" + t.getMessage(), Toast.LENGTH_SHORT).show();
+
+                    } catch (Exception e) {
+
+                    }
+
+                }
+            });
+
+        } catch (Exception e) {
+        }
+    }
+
+
 }
