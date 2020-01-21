@@ -56,10 +56,11 @@ import androidx.recyclerview.widget.RecyclerView;
 import com.app.detection.customview.NointernetDialog;
 import com.app.detection.env.ImageUtils;
 import com.app.detection.env.Logger;
-import com.app.detection.org.opencv.android.BaseLoaderCallback;
-import com.app.detection.org.opencv.android.LoaderCallbackInterface;
-import com.app.detection.org.opencv.android.OpenCVLoader;
 
+
+import org.opencv.android.BaseLoaderCallback;
+import org.opencv.android.LoaderCallbackInterface;
+import org.opencv.android.OpenCVLoader;
 
 import java.nio.ByteBuffer;
 
