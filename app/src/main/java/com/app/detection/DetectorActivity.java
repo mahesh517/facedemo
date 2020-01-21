@@ -97,7 +97,7 @@ public class DetectorActivity extends CameraActivity implements OnImageAvailable
 
     private Classifier detector;
 
-
+    FaceDetection faceDetection;
     BitmapImageAdapter bitmapImageAdapter;
 
     ApiService apiService, manualAPiService;
@@ -134,7 +134,7 @@ public class DetectorActivity extends CameraActivity implements OnImageAvailable
         heightofSurfaceView = height;
         boundRect = rectf;
         apiService = APIServiceFactory.getRetrofit().create(ApiService.class);
-
+        manualAPiService = APIServiceFactory.getRetrofit().create(ApiService.class);
         facesBitmap = new ArrayList<>();
 
         tracker = new MultiBoxTracker(this);
@@ -142,6 +142,7 @@ public class DetectorActivity extends CameraActivity implements OnImageAvailable
 
         fileObject = getJSONResource(DetectorActivity.this);
 
+        faceDetection = new FaceDetection(this);
 
         if (fileObject == null) {
 
@@ -582,6 +583,7 @@ public class DetectorActivity extends CameraActivity implements OnImageAvailable
         }
     }
 
+
     public FaceSearchResponse getFaceresultManual(String base64String) {
 
 
@@ -592,8 +594,8 @@ public class DetectorActivity extends CameraActivity implements OnImageAvailable
             searchHeaderr.setImage_encoded(base64String);
             searchHeaderr.setUser_id("5d0a8ef72ad9c04228140739");
 
-            manualAPiService = APIServiceFactory.getRetrofit().create(ApiService.class);
-            generateNoteOnSD(DetectorActivity.this, System.currentTimeMillis() + ".txt", base64String);
+
+//            generateNoteOnSD(DetectorActivity.this, System.currentTimeMillis() + ".txt", base64String);
             manualAPiService.getresult(searchHeaderr).enqueue(new Callback<FaceSearch>() {
                 @Override
                 public void onResponse(Call<FaceSearch> call, Response<FaceSearch> response) {
