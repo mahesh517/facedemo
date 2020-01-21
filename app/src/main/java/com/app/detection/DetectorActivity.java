@@ -149,6 +149,8 @@ public class DetectorActivity extends CameraActivity implements OnImageAvailable
 
             Toast.makeText(this, "Please add your admin json file", Toast.LENGTH_SHORT).show();
 
+        } else {
+            Log.e("fileObject", fileObject.toString());
         }
         int cropSize = TF_OD_API_INPUT_SIZE;
 
