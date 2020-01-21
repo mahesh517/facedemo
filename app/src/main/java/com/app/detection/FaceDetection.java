@@ -13,9 +13,12 @@ public class FaceDetection {
     DetectorActivity detectorActivity;
 
 
+    public FaceDetection() {
 
-    public FaceDetection (DetectorActivity detectorActivity){
-        this.detectorActivity=detectorActivity;
+    }
+
+    public FaceDetection(DetectorActivity detectorActivity) {
+        this.detectorActivity = detectorActivity;
     }
 
 
@@ -27,7 +30,7 @@ public class FaceDetection {
     }
 
 
-    public FaceSearchResponse getFaceResult(String base64){
+    public FaceSearchResponse getFaceResult(String base64) {
 
         return detectorActivity.getFaceresultManual(base64);
     }

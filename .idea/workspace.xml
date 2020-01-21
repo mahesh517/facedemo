@@ -10,11 +10,7 @@
     <option name="TOOL_WINDOW_CONFIGURED_FILTER" value="No Filters" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="a76501db-07d4-4293-a302-5150e4fcd8ed" name="Default Changelist" comment="">
-      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/app/src/main/java/com/app/detection/DetectorActivity.java" beforeDir="false" afterPath="$PROJECT_DIR$/app/src/main/java/com/app/detection/DetectorActivity.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/app/src/main/java/com/app/detection/FaceDetection.java" beforeDir="false" afterPath="$PROJECT_DIR$/app/src/main/java/com/app/detection/FaceDetection.java" afterDir="false" />
-    </list>
+    <list default="true" id="a76501db-07d4-4293-a302-5150e4fcd8ed" name="Default Changelist" comment="" />
     <ignored path="$PROJECT_DIR$/build/" />
     <ignored path="$PROJECT_DIR$/out/" />
     <ignored path="$PROJECT_DIR$/app/.gradle/" />
@@ -482,11 +478,19 @@
       <option name="project" value="LOCAL" />
       <updated>1579596741854</updated>
     </task>
-    <option name="localTasksCounter" value="11" />
+    <task id="LOCAL-00011" summary="#faceresult">
+      <created>1579601427086</created>
+      <option name="number" value="00011" />
+      <option name="presentableId" value="LOCAL-00011" />
+      <option name="project" value="LOCAL" />
+      <updated>1579601427086</updated>
+    </task>
+    <option name="localTasksCounter" value="12" />
     <servers />
   </component>
   <component name="ToolWindowManager">
     <frame x="-8" y="-8" width="1320" height="784" extended-state="6" />
+    <editor active="true" />
     <layout>
       <window_info id="Captures" order="0" side_tool="true" weight="0.25" />
       <window_info active="true" content_ui="combo" id="Project" order="1" visible="true" weight="0.31984127" />
@@ -530,7 +534,8 @@
     <MESSAGE value="#opencvissue_new" />
     <MESSAGE value="#removeopencvfile" />
     <MESSAGE value="#fileobjectupdate" />
-    <option name="LAST_COMMIT_MESSAGE" value="#fileobjectupdate" />
+    <MESSAGE value="#faceresult" />
+    <option name="LAST_COMMIT_MESSAGE" value="#faceresult" />
   </component>
   <component name="editorHistoryManager">
     <entry file="file://$PROJECT_DIR$/app/src/main/java/com/app/detection/ejml/alg/dense/linsol/chol/LinearSolverChol_D64.java" />
