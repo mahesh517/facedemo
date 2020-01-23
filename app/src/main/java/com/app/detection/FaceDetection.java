@@ -13,6 +13,7 @@ import androidx.core.content.ContextCompat;
 import com.app.detection.ResponseModel.FaceSearchResponse;
 import com.app.detection.ServiceApi.APIServiceFactory;
 import com.app.detection.ServiceApi.ApiService;
+import com.app.detection.customview.ProgressDialog;
 import com.app.detection.model.AddUserResponse;
 import com.app.detection.model.FaceSearch;
 import com.app.detection.model.ManualAddUser;
@@ -43,6 +44,8 @@ public class FaceDetection {
     DetectorActivity detectorActivity;
     ApiService apiService;
 
+    ProgressDialog progressDialog;
+
     public FaceDetection() {
 
         detectorActivity = new DetectorActivity();
@@ -70,12 +73,12 @@ public class FaceDetection {
     public void sendDetails(Context context, File file) {
         try {
 
-
+            showProgressDailog(context);
             RequestBody user_id = RequestBody.create(MediaType.parse("multipart/form-data"), "5d0a8ef72ad9c04228140739");
             apiService.addNewUser(prepareFilePart(file.getAbsolutePath()), user_id).enqueue(new Callback<ManualAddUser>() {
                 @Override
                 public void onResponse(Call<ManualAddUser> call, Response<ManualAddUser> response) {
-
+                    DropProgressDailog(context);
                     Log.e("sendDetails", new Gson().toJson(response.body()));
                     try {
                         Toast.makeText(context, "" + response.body().getMessage(), Toast.LENGTH_SHORT).show();
@@ -109,7 +112,7 @@ public class FaceDetection {
 //        try {
 
         Log.e("path", imagePath + "/" + username);
-
+        showProgressDailog(context);
 
         RequestBody user_id = RequestBody.create(MediaType.parse("multipart/form-data"), "5d0a8ef72ad9c04228140739");
         RequestBody name = RequestBody.create(MediaType.parse("multipart/form-data"), username);
@@ -119,7 +122,7 @@ public class FaceDetection {
             public void onResponse(Call<AddUserResponse> call, Response<AddUserResponse> response) {
 
                 Log.e("senWithApproval", new Gson().toJson(response.body()));
-
+                DropProgressDailog(context);
                 if (response.raw().code() == 200 && response.body().getStatus().equalsIgnoreCase("ok")) {
 
                     Toast.makeText(context, "" + response.body().getMessage(), Toast.LENGTH_SHORT).show();
@@ -136,6 +139,8 @@ public class FaceDetection {
             public void onFailure(Call<AddUserResponse> call, Throwable t) {
 
                 try {
+
+                    DropProgressDailog(context);
                     Toast.makeText(context, "" + t.getMessage(), Toast.LENGTH_SHORT).show();
 
                 } catch (Exception e) {
@@ -147,36 +152,62 @@ public class FaceDetection {
 
     }
 
-    public void getFaceresult(Bitmap faceCroped) {
+    public void getFaceresult(Context context, Bitmap faceCroped, ManualSearchResponse manualSearchResponse) {
         try {
 
             SearchHeaderr searchHeaderr = new SearchHeaderr();
             searchHeaderr.setImage_encoded(getBase64fromBitmap(faceCroped));
             searchHeaderr.setUser_id("5d0a8ef72ad9c04228140739");
 
-
+            showProgressDailog(context);
             apiService.getresult(searchHeaderr).enqueue(new Callback<FaceSearch>() {
                 @Override
                 public void onResponse(Call<FaceSearch> call, Response<FaceSearch> response) {
-
+                    DropProgressDailog(context);
 
                     Log.e("response_manual_api", new Gson().toJson(response));
-                    if (response.raw().code() == 200 && response.body().getStatus().equalsIgnoreCase("ok")) {
 
-                        List<User> users = response.body().getData().getUser();
+                    FaceSearch faceSearch = response.body();
 
-                    }
+                    manualSearchResponse.onResponse(faceSearch);
+
+
                 }
 
                 @Override
                 public void onFailure(Call<FaceSearch> call, Throwable t) {
                     Log.e("onFailure", t.getMessage());
+
+                    DropProgressDailog(context);
                 }
             });
         } catch (Exception e) {
             Log.e("Exception", e.getMessage());
+
+            DropProgressDailog(context);
         }
     }
 
+    public interface ManualSearchResponse {
+        void onResponse(FaceSearch faceSearch);
+    }
+
+
+    public void showProgressDailog(Context context) {
+
+        progressDialog = new ProgressDialog(context);
+        progressDialog.setCanceledOnTouchOutside(false);
+        progressDialog.show();
+
+    }
+
+    public void DropProgressDailog(Context context) {
+
+
+        if (progressDialog != null) {
+
+            progressDialog.dismiss();
+        }
+    }
 
 }
