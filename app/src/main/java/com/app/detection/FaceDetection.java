@@ -20,10 +20,7 @@ public class FaceDetection {
 
     public FaceDetection() {
 
-    }
-
-    public FaceDetection(DetectorActivity detectorActivity) {
-        this.detectorActivity = detectorActivity;
+        detectorActivity = new DetectorActivity();
     }
 
 

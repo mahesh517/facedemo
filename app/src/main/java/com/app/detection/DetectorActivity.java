@@ -101,7 +101,6 @@ public class DetectorActivity extends CameraActivity implements OnImageAvailable
 
     private Classifier detector;
 
-    FaceDetection faceDetection;
     BitmapImageAdapter bitmapImageAdapter;
 
     ApiService apiService, manualAPiService;
@@ -151,7 +150,6 @@ public class DetectorActivity extends CameraActivity implements OnImageAvailable
 
         fileObject = getJSONResource(DetectorActivity.this);
 
-        faceDetection = new FaceDetection(this);
 
         if (fileObject == null) {
 
