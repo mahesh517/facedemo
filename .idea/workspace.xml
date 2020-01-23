@@ -11,6 +11,7 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="a76501db-07d4-4293-a302-5150e4fcd8ed" name="Default Changelist" comment="">
+      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/app/src/main/java/com/app/detection/DetectorActivity.java" beforeDir="false" afterPath="$PROJECT_DIR$/app/src/main/java/com/app/detection/DetectorActivity.java" afterDir="false" />
     </list>
     <ignored path="$PROJECT_DIR$/build/" />
@@ -87,8 +88,8 @@
       <file pinned="false" current-in-tab="true">
         <entry file="file://$PROJECT_DIR$/app/src/main/java/com/app/detection/DetectorActivity.java">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="200">
-              <caret line="847" column="31" selection-start-line="847" selection-start-column="31" selection-end-line="847" selection-end-column="31" />
+            <state relative-caret-position="540">
+              <caret line="885" lean-forward="true" selection-start-line="885" selection-end-line="885" />
               <folding>
                 <element signature="imports" expanded="true" />
                 <element signature="e#21035#21036#0" expanded="true" />
@@ -591,15 +592,21 @@
       <option name="project" value="LOCAL" />
       <updated>1579763261054</updated>
     </task>
-    <option name="localTasksCounter" value="17" />
+    <task id="LOCAL-00017" summary="#manualapiupdate">
+      <created>1579765004530</created>
+      <option name="number" value="00017" />
+      <option name="presentableId" value="LOCAL-00017" />
+      <option name="project" value="LOCAL" />
+      <updated>1579765004530</updated>
+    </task>
+    <option name="localTasksCounter" value="18" />
     <servers />
   </component>
   <component name="ToolWindowManager">
     <frame x="-8" y="-8" width="1320" height="784" extended-state="6" />
-    <editor active="true" />
     <layout>
       <window_info id="Captures" order="0" side_tool="true" weight="0.25" />
-      <window_info content_ui="combo" id="Project" order="1" weight="0.31984127" />
+      <window_info active="true" content_ui="combo" id="Project" order="1" visible="true" weight="0.31984127" />
       <window_info id="Structure" order="2" side_tool="true" />
       <window_info id="Favorites" order="3" side_tool="true" />
       <window_info id="Build Variants" order="4" side_tool="true" />
@@ -646,7 +653,8 @@
     <MESSAGE value="#Manual_api_complete" />
     <MESSAGE value="#Manual_api_complete_changes" />
     <MESSAGE value="#license_update" />
-    <option name="LAST_COMMIT_MESSAGE" value="#license_update" />
+    <MESSAGE value="#manualapiupdate" />
+    <option name="LAST_COMMIT_MESSAGE" value="#manualapiupdate" />
   </component>
   <component name="editorHistoryManager">
     <entry file="file://$PROJECT_DIR$/app/src/main/java/com/app/detection/ejml/ops/MatrixFeatures.java" />
@@ -898,8 +906,8 @@
     </entry>
     <entry file="file://$PROJECT_DIR$/app/src/main/java/com/app/detection/DetectorActivity.java">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="200">
-          <caret line="847" column="31" selection-start-line="847" selection-start-column="31" selection-end-line="847" selection-end-column="31" />
+        <state relative-caret-position="540">
+          <caret line="885" lean-forward="true" selection-start-line="885" selection-end-line="885" />
           <folding>
             <element signature="imports" expanded="true" />
             <element signature="e#21035#21036#0" expanded="true" />

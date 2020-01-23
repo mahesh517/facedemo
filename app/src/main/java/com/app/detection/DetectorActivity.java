@@ -883,7 +883,7 @@ public class DetectorActivity extends CameraActivity implements OnImageAvailable
 
 //            Log.e("Exception", e.getMessage());
 //        }
-}
+
 
 
     public void checkLicense(LicenseHeader licenseHeader) {
