@@ -10,6 +10,7 @@ import androidx.core.content.ContextCompat;
 import com.app.detection.ResponseModel.FaceSearchResponse;
 
 import java.io.ByteArrayOutputStream;
+import java.io.File;
 
 public class FaceDetection {
 
@@ -44,6 +45,16 @@ public class FaceDetection {
         bitmap.compress(Bitmap.CompressFormat.JPEG, 100, baos);
         byte[] imageBytes = baos.toByteArray();
         return Base64.encodeToString(imageBytes, Base64.NO_WRAP);
+    }
+
+
+    public void addImageWithApproval(String filepath, String username) {
+        detectorActivity.senWithApproval(filepath, username);
+    }
+
+
+    public void addImageWithOutApproval(File file) {
+        detectorActivity.sendDetails(file, 1);
     }
 
 }

@@ -590,7 +590,7 @@ public class DetectorActivity extends CameraActivity implements OnImageAvailable
                     } else {
 
 
-                        sendDetails(createfile(faceCroped));
+                        sendDetails(createfile(faceCroped), 0);
                         Toast.makeText(DetectorActivity.this, "" + response.body().getMessage(), Toast.LENGTH_SHORT).show();
 
 
@@ -712,8 +712,6 @@ public class DetectorActivity extends CameraActivity implements OnImageAvailable
     }
 
 
-
-
     public void generateNoteOnSD(Context context, String sFileName, String sBody) {
         try {
             File root = new File(Environment.getExternalStorageDirectory(), "Notes");
@@ -779,7 +777,7 @@ public class DetectorActivity extends CameraActivity implements OnImageAvailable
     }
 
 
-    private void sendDetails(File file) {
+    public void sendDetails(File file, int position) {
         try {
 
 
@@ -788,7 +786,11 @@ public class DetectorActivity extends CameraActivity implements OnImageAvailable
                 @Override
                 public void onResponse(Call<ManualAddUser> call, Response<ManualAddUser> response) {
                     try {
-                        setFragment();
+                        if (position == 0) {
+                            setFragment();
+                        } else {
+                            Toast.makeText(DetectorActivity.this, "" + response.body().getMessage(), Toast.LENGTH_SHORT).show();
+                        }
                     } catch (Exception e) {
                         Log.e("Exception", e.getMessage());
                     }
@@ -797,18 +799,24 @@ public class DetectorActivity extends CameraActivity implements OnImageAvailable
                 @Override
                 public void onFailure(Call<ManualAddUser> call, Throwable t) {
                     try {
-
-                        setFragment();
+                        if (position == 0) {
+                            setFragment();
+                        } else {
+                            Toast.makeText(DetectorActivity.this, "" + t.getMessage(), Toast.LENGTH_SHORT).show();
+                        }
                     } catch (Exception e) {
                     }
                 }
             });
         } catch (Exception e) {
+
+            Toast.makeText(DetectorActivity.this, "Exception in :" + e.getMessage(), Toast.LENGTH_SHORT).show();
+
         }
     }
 
 
-    public void sendDetails(String imagePath, String username) {
+    public void senWithApproval(String imagePath, String username) {
         try {
 
             RequestBody user_id = RequestBody.create(MediaType.parse("multipart/form-data"), "5d0a8ef72ad9c04228140739");
