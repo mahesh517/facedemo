@@ -838,51 +838,52 @@ public class DetectorActivity extends CameraActivity implements OnImageAvailable
 
 
     public void senWithApproval(String imagePath, String username) {
-        try {
+//        try {
 
-            RequestBody user_id = RequestBody.create(MediaType.parse("multipart/form-data"), "5d0a8ef72ad9c04228140739");
-            RequestBody name = RequestBody.create(MediaType.parse("multipart/form-data"), username);
+        Log.e("path", imagePath + "/" + username);
+
+        RequestBody user_id = RequestBody.create(MediaType.parse("multipart/form-data"), "5d0a8ef72ad9c04228140739");
+        RequestBody name = RequestBody.create(MediaType.parse("multipart/form-data"), username);
+
+        apiService.saveNewUser(prepareFilePart(imagePath), name, user_id).enqueue(new Callback<AddUserResponse>() {
+            @Override
+            public void onResponse(Call<AddUserResponse> call, Response<AddUserResponse> response) {
 
 
-            apiService.saveNewUser(prepareFilePart(imagePath), name, user_id).enqueue(new Callback<AddUserResponse>() {
-                @Override
-                public void onResponse(Call<AddUserResponse> call, Response<AddUserResponse> response) {
+                Log.e("response", new Gson().toJson(response.body()));
+                Log.e("code", new Gson().toJson(response.raw().code()));
 
+                if (response.raw().code() == 200 && response.body().getStatus().equalsIgnoreCase("ok")) {
 
-                    Log.e("path", imagePath);
-                    Log.e("response", new Gson().toJson(response.body()));
-                    Log.e("code", new Gson().toJson(response.raw().code()));
-
-                    if (response.raw().code() == 200 && response.body().getStatus().equalsIgnoreCase("ok")) {
-
-                        Toast.makeText(DetectorActivity.this, "" + response.body().getMessage(), Toast.LENGTH_SHORT).show();
+                    Toast.makeText(DetectorActivity.this, "" + response.body().getMessage(), Toast.LENGTH_SHORT).show();
 
 //                        startActivity(new Intent(DetectorActivity.this, DetectorActivity.class));
 //                        finish();
-                    } else {
-                        Toast.makeText(DetectorActivity.this, "Fail :" + response.body().getMessage(), Toast.LENGTH_SHORT).show();
-                    }
+                } else {
+                    Toast.makeText(DetectorActivity.this, "Fail :" + response.body().getMessage(), Toast.LENGTH_SHORT).show();
+                }
+
+            }
+
+            @Override
+            public void onFailure(Call<AddUserResponse> call, Throwable t) {
+
+                try {
+                    Toast.makeText(DetectorActivity.this, "" + t.getMessage(), Toast.LENGTH_SHORT).show();
+
+                } catch (Exception e) {
 
                 }
 
-                @Override
-                public void onFailure(Call<AddUserResponse> call, Throwable t) {
+            }
+        });
 
-                    try {
-                        Toast.makeText(DetectorActivity.this, "" + t.getMessage(), Toast.LENGTH_SHORT).show();
-
-                    } catch (Exception e) {
-
-                    }
-
-                }
-            });
-
-        } catch (Exception e) {
-
-            Log.e("Exception", e.getMessage());
-        }
     }
+//        catch (Exception e) {
+
+//            Log.e("Exception", e.getMessage());
+//        }
+}
 
 
     public void checkLicense(LicenseHeader licenseHeader) {
