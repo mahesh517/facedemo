@@ -2,10 +2,14 @@ package com.app.detection;
 
 import android.content.Context;
 import android.content.Intent;
+import android.graphics.Bitmap;
+import android.util.Base64;
 
 import androidx.core.content.ContextCompat;
 
 import com.app.detection.ResponseModel.FaceSearchResponse;
+
+import java.io.ByteArrayOutputStream;
 
 public class FaceDetection {
 
@@ -30,9 +34,16 @@ public class FaceDetection {
     }
 
 
-    public FaceSearchResponse getFaceResult(String base64) {
+    public FaceSearchResponse getFaceResult(Bitmap bitmap) {
 
-        return detectorActivity.getFaceresultManual(base64);
+        return detectorActivity.getFaceresultManual(getBase64fromBitmap(bitmap));
+    }
+
+    public String getBase64fromBitmap(Bitmap bitmap) {
+        ByteArrayOutputStream baos = new ByteArrayOutputStream();
+        bitmap.compress(Bitmap.CompressFormat.JPEG, 100, baos);
+        byte[] imageBytes = baos.toByteArray();
+        return Base64.encodeToString(imageBytes, Base64.NO_WRAP);
     }
 
 }

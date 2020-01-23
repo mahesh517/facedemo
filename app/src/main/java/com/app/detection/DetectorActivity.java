@@ -17,6 +17,7 @@ import android.media.ImageReader.OnImageAvailableListener;
 import android.os.Build;
 import android.os.Environment;
 import android.os.SystemClock;
+import android.provider.Settings;
 import android.util.Base64;
 import android.util.Log;
 import android.util.Size;
@@ -27,8 +28,11 @@ import android.widget.Toast;
 import androidx.annotation.RequiresApi;
 
 import com.app.detection.ResponseModel.FaceSearchResponse;
+import com.app.detection.customview.AlertDialog;
 import com.app.detection.model.AddUserResponse;
 import com.app.detection.model.ManualAddUser;
+import com.app.detection.model.SdkLicense.License;
+import com.app.detection.model.SdkLicense.LicenseHeader;
 import com.google.gson.Gson;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
@@ -123,6 +127,8 @@ public class DetectorActivity extends CameraActivity implements OnImageAvailable
     private int widthofSurfaceView;
     private int heightofSurfaceView;
 
+
+    AlertDialog alertDialog;
     JsonObject fileObject;
 
     @Override
@@ -136,6 +142,9 @@ public class DetectorActivity extends CameraActivity implements OnImageAvailable
         apiService = APIServiceFactory.getRetrofit().create(ApiService.class);
         manualAPiService = APIServiceFactory.getRetrofit().create(ApiService.class);
         facesBitmap = new ArrayList<>();
+
+
+        LicenseHeader licenseHeader = new LicenseHeader();
 
         tracker = new MultiBoxTracker(this);
 
@@ -152,6 +161,21 @@ public class DetectorActivity extends CameraActivity implements OnImageAvailable
 
         } else {
             Log.e("fileObject", fileObject.toString());
+
+            JsonObject configuration = fileObject.getAsJsonObject("config");
+            String android_id = Settings.Secure.getString(getContentResolver(), Settings.Secure.ANDROID_ID);
+            if (configuration != null) {
+
+                licenseHeader.setDevice_id(android_id);
+                licenseHeader.setDevice_type("android");
+                licenseHeader.setType_of_sdk(configuration.getAsJsonObject("type_of_sdk").toString());
+                licenseHeader.setUser_id(configuration.getAsJsonObject("user_id").toString());
+                licenseHeader.setPackagename(configuration.getAsJsonObject("package_name").toString());
+
+                checkLicense(licenseHeader);
+            }
+
+
         }
         int cropSize = TF_OD_API_INPUT_SIZE;
 
@@ -688,6 +712,8 @@ public class DetectorActivity extends CameraActivity implements OnImageAvailable
     }
 
 
+
+
     public void generateNoteOnSD(Context context, String sFileName, String sBody) {
         try {
             File root = new File(Environment.getExternalStorageDirectory(), "Notes");
@@ -825,6 +851,23 @@ public class DetectorActivity extends CameraActivity implements OnImageAvailable
 
         } catch (Exception e) {
         }
+    }
+
+
+    public void checkLicense(LicenseHeader licenseHeader) {
+
+        apiService.checkLicense(licenseHeader).enqueue(new Callback<License>() {
+            @Override
+            public void onResponse(Call<License> call, Response<License> response) {
+
+            }
+
+            @Override
+            public void onFailure(Call<License> call, Throwable t) {
+
+            }
+        });
+
     }
 
 

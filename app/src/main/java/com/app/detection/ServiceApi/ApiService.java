@@ -6,6 +6,8 @@ import com.app.detection.model.FaceSearch;
 import com.app.detection.model.LoginApi.Login;
 import com.app.detection.model.LoginHeader;
 import com.app.detection.model.ManualAddUser;
+import com.app.detection.model.SdkLicense.License;
+import com.app.detection.model.SdkLicense.LicenseHeader;
 import com.app.detection.model.SearchHeaderr;
 
 import okhttp3.MultipartBody;
@@ -35,4 +37,7 @@ public interface ApiService {
     Call<ManualAddUser> addNewUser(@Part MultipartBody.Part file,
                                    @Part("user_id") RequestBody userId);
 
+
+    @POST("sdk/checkTheUserHaveValidLicenseToInstallSdk")
+    Call<License> checkLicense(@Body LicenseHeader licenseHeader);
 }
