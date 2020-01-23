@@ -62,15 +62,18 @@
                 android:gravity="center"
                 android:text="Retry"
                 android:textColor="@android:color/black"
-                android:textSize="@dimen/text_size_16" />
+                android:textSize="@dimen/text_size_16"
+                android:visibility="gone" />
 
             <View
                 android:layout_width="2dp"
                 android:layout_height="wrap_content"
-                android:background="@android:color/darker_gray" />
+                android:background="@android:color/darker_gray"
+                android:visibility="gone" />
 
 
             <TextView
+                android:id="@+id/close_btn"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_gravity="center"

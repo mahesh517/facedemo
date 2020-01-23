@@ -3,7 +3,6 @@
 package com.app.detection;
 
 import android.content.Context;
-import android.content.Intent;
 import android.graphics.Bitmap;
 import android.graphics.Bitmap.Config;
 import android.graphics.Canvas;
@@ -28,13 +27,25 @@ import android.widget.Toast;
 import androidx.annotation.RequiresApi;
 
 import com.app.detection.ResponseModel.FaceSearchResponse;
-import com.app.detection.customview.AlertDialog;
+import com.app.detection.ServiceApi.APIServiceFactory;
+import com.app.detection.ServiceApi.ApiService;
+import com.app.detection.customview.CustomDialog;
+import com.app.detection.customview.OverlayView;
+import com.app.detection.customview.OverlayView.DrawCallback;
+import com.app.detection.env.BorderedText;
+import com.app.detection.env.ImageUtils;
+import com.app.detection.env.Logger;
 import com.app.detection.model.AddUserResponse;
+import com.app.detection.model.FaceSearch;
 import com.app.detection.model.ManualAddUser;
 import com.app.detection.model.SdkLicense.License;
 import com.app.detection.model.SdkLicense.LicenseHeader;
+import com.app.detection.model.SearchHeaderr;
+import com.app.detection.tflite.Classifier;
+import com.app.detection.tflite.TFLiteObjectDetectionAPIModel;
+import com.app.detection.tracking.MultiBoxTracker;
+import com.app.detection.tracking.Svd;
 import com.google.gson.Gson;
-import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 
 import org.json.JSONException;
@@ -42,20 +53,6 @@ import org.json.JSONObject;
 import org.opencv.android.Utils;
 import org.opencv.core.Mat;
 import org.opencv.imgproc.Imgproc;
-
-import com.app.detection.ServiceApi.APIServiceFactory;
-import com.app.detection.ServiceApi.ApiService;
-import com.app.detection.customview.OverlayView;
-import com.app.detection.customview.OverlayView.DrawCallback;
-import com.app.detection.env.BorderedText;
-import com.app.detection.env.ImageUtils;
-import com.app.detection.env.Logger;
-import com.app.detection.model.FaceSearch;
-import com.app.detection.model.SearchHeaderr;
-import com.app.detection.tflite.Classifier;
-import com.app.detection.tflite.TFLiteObjectDetectionAPIModel;
-import com.app.detection.tracking.MultiBoxTracker;
-import com.app.detection.tracking.Svd;
 
 import java.io.ByteArrayOutputStream;
 import java.io.File;
@@ -127,8 +124,8 @@ public class DetectorActivity extends CameraActivity implements OnImageAvailable
     private int heightofSurfaceView;
 
 
-    AlertDialog alertDialog;
-    JsonObject fileObject;
+    CustomDialog alertDialog;
+    JSONObject fileObject = null;
 
     @Override
     public void onPreviewSizeChosen(final Size size, final int rotation, final RectF rectf, final int width, final int height) {
@@ -148,7 +145,11 @@ public class DetectorActivity extends CameraActivity implements OnImageAvailable
         tracker = new MultiBoxTracker(this);
 
 
-        fileObject = getJSONResource(DetectorActivity.this);
+        try {
+            fileObject = new JSONObject(readJSONFromAsset());
+        } catch (JSONException e) {
+            e.printStackTrace();
+        }
 
 
         if (fileObject == null) {
@@ -160,17 +161,33 @@ public class DetectorActivity extends CameraActivity implements OnImageAvailable
         } else {
             Log.e("fileObject", fileObject.toString());
 
-            JsonObject configuration = fileObject.getAsJsonObject("config");
+            JSONObject configuration = null;
+            try {
+                configuration = fileObject.getJSONObject("config");
+            } catch (JSONException e) {
+                e.printStackTrace();
+            }
             String android_id = Settings.Secure.getString(getContentResolver(), Settings.Secure.ANDROID_ID);
             if (configuration != null) {
 
                 licenseHeader.setDevice_id(android_id);
                 licenseHeader.setDevice_type("android");
-                licenseHeader.setType_of_sdk(configuration.getAsJsonObject("type_of_sdk").toString());
-                licenseHeader.setUser_id(configuration.getAsJsonObject("user_id").toString());
-                licenseHeader.setPackagename(configuration.getAsJsonObject("package_name").toString());
+                try {
+                    licenseHeader.setType_of_sdk(configuration.getJSONObject("type_of_sdk").toString());
+                    licenseHeader.setUser_id(configuration.getJSONObject("user_id").toString());
+                    licenseHeader.setPackagename(configuration.getJSONObject("package_name").toString());
+                } catch (JSONException e) {
+                    e.printStackTrace();
+                }
 
-                checkLicense(licenseHeader);
+
+                Log.e("licenseHeader", new Gson().toJson(licenseHeader));
+
+                if (licenseHeader != null) {
+//                    checkLicense(licenseHeader);
+                }
+
+
             }
 
 
@@ -727,17 +744,23 @@ public class DetectorActivity extends CameraActivity implements OnImageAvailable
         }
     }
 
-    @RequiresApi(api = Build.VERSION_CODES.KITKAT)
-    public JsonObject getJSONResource(Context context) {
-        try (InputStream is = context.getAssets().open("file.json")) {
-            JsonParser parser = new JsonParser();
-            return parser.parse(new InputStreamReader(is)).getAsJsonObject();
-        } catch (Exception e) {
-            Log.e(TAG, e.getMessage(), e);
 
+    public String readJSONFromAsset() {
+        String json = null;
+        try {
+            InputStream is = getAssets().open("file.json");
+            int size = is.available();
+            byte[] buffer = new byte[size];
+            is.read(buffer);
+            is.close();
+            json = new String(buffer, "UTF-8");
+        } catch (IOException ex) {
+            ex.printStackTrace();
+            return null;
         }
-        return null;
+        return json;
     }
+
 
     private File createfile(Bitmap bitmp) {
         File f = new File(getCacheDir(), System.currentTimeMillis() + ".jpg");
@@ -834,8 +857,8 @@ public class DetectorActivity extends CameraActivity implements OnImageAvailable
 
                         Toast.makeText(DetectorActivity.this, "" + response.body().getMessage(), Toast.LENGTH_SHORT).show();
 
-                        startActivity(new Intent(DetectorActivity.this, DetectorActivity.class));
-                        finish();
+//                        startActivity(new Intent(DetectorActivity.this, DetectorActivity.class));
+//                        finish();
                     } else {
                         Toast.makeText(DetectorActivity.this, "Fail :" + response.body().getMessage(), Toast.LENGTH_SHORT).show();
                     }
@@ -856,6 +879,8 @@ public class DetectorActivity extends CameraActivity implements OnImageAvailable
             });
 
         } catch (Exception e) {
+
+            Log.e("Exception", e.getMessage());
         }
     }
 
@@ -866,6 +891,15 @@ public class DetectorActivity extends CameraActivity implements OnImageAvailable
             @Override
             public void onResponse(Call<License> call, Response<License> response) {
 
+
+                if (response.raw().code() == 200) {
+
+                } else {
+
+                    callBlankFragment();
+                    showAlert(response.body().getMessage());
+                }
+
             }
 
             @Override
@@ -874,6 +908,20 @@ public class DetectorActivity extends CameraActivity implements OnImageAvailable
             }
         });
 
+    }
+
+
+    public void showAlert(String message) {
+
+        alertDialog = new CustomDialog(DetectorActivity.this, R.style.AppTheme, message, new CustomDialog.CloseonCall() {
+            @Override
+            public void onClick(boolean status) {
+
+            }
+        });
+
+        alertDialog.setCanceledOnTouchOutside(false);
+        alertDialog.show();
     }
 
 
