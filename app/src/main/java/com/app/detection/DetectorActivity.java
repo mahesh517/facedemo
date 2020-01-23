@@ -145,18 +145,18 @@ public class DetectorActivity extends CameraActivity implements OnImageAvailable
         tracker = new MultiBoxTracker(this);
 
 
-        try {
-            fileObject = new JSONObject(readJSONFromAsset());
-        } catch (JSONException e) {
-            e.printStackTrace();
-        }
+//        try {
+//            fileObject = new JSONObject(readJSONFromAsset());
+//        } catch (JSONException e) {
+//            e.printStackTrace();
+//        }
 
 
         if (fileObject == null) {
 
-            callBlankFragment();
+//            callBlankFragment();
 
-            Toast.makeText(this, "Please add your admin json file", Toast.LENGTH_SHORT).show();
+//            Toast.makeText(this, "Please add your admin json file", Toast.LENGTH_SHORT).show();
 
         } else {
             Log.e("fileObject", fileObject.toString());
@@ -364,12 +364,12 @@ public class DetectorActivity extends CameraActivity implements OnImageAvailable
                                 try {
 
 
-                                    int x1 = (int) location.left;
-                                    int y1 = (int) location.top;
+                                    int x1 = (int) location.left - 20;
+                                    int y1 = (int) location.top - 20;
                                     int x2 = (int) location.right;
                                     int y2 = (int) location.bottom;
-                                    int width = Math.abs(x2 - x1);
-                                    int height = Math.abs(y2 - y1);
+                                    int width = Math.abs(x2 - x1) + 40;
+                                    int height = Math.abs(y2 - y1) + 40;
                                     Log.e("width", Integer.toString(width) + " " + Integer.toString(height));
                                     Matrix matrix = new Matrix();
                                     matrix.postScale(1, -1, rgbFrameBitmap.getWidth() / 2, rgbFrameBitmap.getHeight() / 2);
@@ -546,7 +546,7 @@ public class DetectorActivity extends CameraActivity implements OnImageAvailable
             searchHeaderr.setUser_id("5d0a8ef72ad9c04228140739");
 
 
-            generateNoteOnSD(DetectorActivity.this, System.currentTimeMillis() + ".txt", base64String);
+//            generateNoteOnSD(DetectorActivity.this, System.currentTimeMillis() + ".txt", base64String);
             apiService.getresult(searchHeaderr).enqueue(new Callback<FaceSearch>() {
                 @Override
                 public void onResponse(Call<FaceSearch> call, Response<FaceSearch> response) {
@@ -600,7 +600,9 @@ public class DetectorActivity extends CameraActivity implements OnImageAvailable
 
                             setFragment();
                         } else {
-                            Toast.makeText(DetectorActivity.this, "" + response.body().getMessage(), Toast.LENGTH_SHORT).show();
+
+
+//                            Toast.makeText(DetectorActivity.this, "" + response.body().getMessage(), Toast.LENGTH_SHORT).show();
                         }
                     } else {
 
@@ -727,22 +729,22 @@ public class DetectorActivity extends CameraActivity implements OnImageAvailable
     }
 
 
-    public void generateNoteOnSD(Context context, String sFileName, String sBody) {
-        try {
-            File root = new File(Environment.getExternalStorageDirectory(), "Notes");
-            if (!root.exists()) {
-                root.mkdirs();
-            }
-            File gpxfile = new File(root, sFileName);
-            FileWriter writer = new FileWriter(gpxfile);
-            writer.append(sBody);
-            writer.flush();
-            writer.close();
-            Toast.makeText(context, "Saved", Toast.LENGTH_SHORT).show();
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-    }
+//    public void generateNoteOnSD(Context context, String sFileName, String sBody) {
+//        try {
+//            File root = new File(Environment.getExternalStorageDirectory(), "Notes");
+//            if (!root.exists()) {
+//                root.mkdirs();
+//            }
+//            File gpxfile = new File(root, sFileName);
+//            FileWriter writer = new FileWriter(gpxfile);
+//            writer.append(sBody);
+//            writer.flush();
+//            writer.close();
+//            Toast.makeText(context, "Saved", Toast.LENGTH_SHORT).show();
+//        } catch (IOException e) {
+//            e.printStackTrace();
+//        }
+//    }
 
 
     public String readJSONFromAsset() {
@@ -883,7 +885,6 @@ public class DetectorActivity extends CameraActivity implements OnImageAvailable
 
 //            Log.e("Exception", e.getMessage());
 //        }
-
 
 
     public void checkLicense(LicenseHeader licenseHeader) {
