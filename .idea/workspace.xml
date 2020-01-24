@@ -12,7 +12,6 @@
   <component name="ChangeListManager">
     <list default="true" id="a76501db-07d4-4293-a302-5150e4fcd8ed" name="Default Changelist" comment="">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/app/src/main/res/layout/progress_dailog.xml" beforeDir="false" afterPath="$PROJECT_DIR$/app/src/main/res/layout/progress_dailog.xml" afterDir="false" />
     </list>
     <ignored path="$PROJECT_DIR$/build/" />
     <ignored path="$PROJECT_DIR$/out/" />
@@ -606,7 +605,14 @@
       <option name="project" value="LOCAL" />
       <updated>1579845564118</updated>
     </task>
-    <option name="localTasksCounter" value="23" />
+    <task id="LOCAL-00023" summary="#progressbar_update">
+      <created>1579849240794</created>
+      <option name="number" value="00023" />
+      <option name="presentableId" value="LOCAL-00023" />
+      <option name="project" value="LOCAL" />
+      <updated>1579849240794</updated>
+    </task>
+    <option name="localTasksCounter" value="24" />
     <servers />
   </component>
   <component name="ToolWindowManager">
@@ -664,9 +670,9 @@
     <MESSAGE value="#manualapiupdate_issue" />
     <MESSAGE value="#manual_app" />
     <MESSAGE value="#progressbar" />
-    <MESSAGE value="#progressbar_update" />
     <MESSAGE value="#progressbar_update&amp;manual_search" />
-    <option name="LAST_COMMIT_MESSAGE" value="#progressbar_update&amp;manual_search" />
+    <MESSAGE value="#progressbar_update" />
+    <option name="LAST_COMMIT_MESSAGE" value="#progressbar_update" />
   </component>
   <component name="editorHistoryManager">
     <entry file="file://$PROJECT_DIR$/app/src/main/java/com/app/detection/Svd/BlockInnerMultiplication.java">
