@@ -212,9 +212,13 @@ public class FaceDetection {
     public void DropProgressDailog(Context context) {
 
 
-        if (progressDialog != null) {
+        try {
+            if (progressDialog != null) {
 
-            progressDialog.dismiss();
+                progressDialog.dismiss();
+            }
+        } catch (Exception e) {
+
         }
     }
 
