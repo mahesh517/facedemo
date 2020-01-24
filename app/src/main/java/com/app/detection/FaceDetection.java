@@ -46,11 +46,15 @@ public class FaceDetection {
 
     ProgressDialog progressDialog;
 
+    ManualSearchResponse searchResponse;
+
+
     public FaceDetection() {
 
         detectorActivity = new DetectorActivity();
 
         apiService = APIServiceFactory.getRetrofit().create(ApiService.class);
+
     }
 
 
@@ -155,11 +159,13 @@ public class FaceDetection {
     public void getFaceresult(Context context, Bitmap faceCroped, ManualSearchResponse manualSearchResponse) {
         try {
 
+            manualSearchResponse = this.searchResponse;
             SearchHeaderr searchHeaderr = new SearchHeaderr();
             searchHeaderr.setImage_encoded(getBase64fromBitmap(faceCroped));
             searchHeaderr.setUser_id("5d0a8ef72ad9c04228140739");
 
             showProgressDailog(context);
+            ManualSearchResponse finalManualSearchResponse = manualSearchResponse;
             apiService.getresult(searchHeaderr).enqueue(new Callback<FaceSearch>() {
                 @Override
                 public void onResponse(Call<FaceSearch> call, Response<FaceSearch> response) {
@@ -169,7 +175,9 @@ public class FaceDetection {
 
                     FaceSearch faceSearch = response.body();
 
-                    manualSearchResponse.onResponse(faceSearch);
+                    if (finalManualSearchResponse != null) {
+                        finalManualSearchResponse.onResponse(faceSearch);
+                    }
 
 
                 }

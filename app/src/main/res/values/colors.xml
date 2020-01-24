@@ -4,5 +4,8 @@
     <color name="colorPrimaryDark">#ff6f00</color>
     <color name="colorAccent">#425066</color>
 
+
+    <color name="transparent">@android:color/transparent</color>
+    <color name="dialog_traspe">#99000000</color>
     <color name="semi_transparent">#66000000</color>
 </resources>
