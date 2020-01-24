@@ -200,11 +200,8 @@ public class FaceDetection {
     }
 
     public void DropProgressDailog(Context context) {
-
-
         try {
             if (progressDialog != null) {
-
                 progressDialog.dismiss();
             }
         } catch (Exception e) {
