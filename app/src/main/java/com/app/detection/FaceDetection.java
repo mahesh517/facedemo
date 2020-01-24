@@ -5,12 +5,10 @@ import android.content.Intent;
 import android.graphics.Bitmap;
 import android.util.Base64;
 import android.util.Log;
-import android.view.View;
 import android.widget.Toast;
 
 import androidx.core.content.ContextCompat;
 
-import com.app.detection.ResponseModel.FaceSearchResponse;
 import com.app.detection.ServiceApi.APIServiceFactory;
 import com.app.detection.ServiceApi.ApiService;
 import com.app.detection.customview.ProgressDialog;
@@ -18,18 +16,10 @@ import com.app.detection.model.AddUserResponse;
 import com.app.detection.model.FaceSearch;
 import com.app.detection.model.ManualAddUser;
 import com.app.detection.model.SearchHeaderr;
-import com.app.detection.model.User;
 import com.google.gson.Gson;
-
-import org.json.JSONException;
-import org.json.JSONObject;
 
 import java.io.ByteArrayOutputStream;
 import java.io.File;
-import java.text.SimpleDateFormat;
-import java.util.ArrayList;
-import java.util.Calendar;
-import java.util.List;
 
 import okhttp3.MediaType;
 import okhttp3.MultipartBody;

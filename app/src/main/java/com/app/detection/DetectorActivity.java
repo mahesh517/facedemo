@@ -2,7 +2,6 @@
 
 package com.app.detection;
 
-import android.content.Context;
 import android.graphics.Bitmap;
 import android.graphics.Bitmap.Config;
 import android.graphics.Canvas;
@@ -13,8 +12,6 @@ import android.graphics.Paint.Style;
 import android.graphics.RectF;
 import android.graphics.Typeface;
 import android.media.ImageReader.OnImageAvailableListener;
-import android.os.Build;
-import android.os.Environment;
 import android.os.SystemClock;
 import android.provider.Settings;
 import android.util.Base64;
@@ -23,8 +20,6 @@ import android.util.Size;
 import android.util.TypedValue;
 import android.view.View;
 import android.widget.Toast;
-
-import androidx.annotation.RequiresApi;
 
 import com.app.detection.ResponseModel.FaceSearchResponse;
 import com.app.detection.ServiceApi.APIServiceFactory;
@@ -46,7 +41,6 @@ import com.app.detection.tflite.TFLiteObjectDetectionAPIModel;
 import com.app.detection.tracking.MultiBoxTracker;
 import com.app.detection.tracking.Svd;
 import com.google.gson.Gson;
-import com.google.gson.JsonParser;
 
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -58,10 +52,8 @@ import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
-import java.io.FileWriter;
 import java.io.IOException;
 import java.io.InputStream;
-import java.io.InputStreamReader;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Arrays;
