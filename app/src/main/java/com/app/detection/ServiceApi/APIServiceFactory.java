@@ -1,13 +1,14 @@
 package com.app.detection.ServiceApi;
 
+import java.io.IOException;
 import java.util.concurrent.TimeUnit;
 
+import okhttp3.Interceptor;
 import okhttp3.OkHttpClient;
 import okhttp3.Request;
 import okhttp3.Response;
 import retrofit2.Retrofit;
 import retrofit2.converter.gson.GsonConverterFactory;
-import retrofit2.converter.scalars.ScalarsConverterFactory;
 
 
 public class APIServiceFactory {
@@ -21,18 +22,21 @@ public class APIServiceFactory {
 
         OkHttpClient.Builder httpClient = new OkHttpClient.Builder().readTimeout(2, TimeUnit.MINUTES).connectTimeout(2, TimeUnit.MINUTES);
 
-        httpClient.addInterceptor(chain -> {
-            Request original = chain.request();
+        httpClient.addInterceptor(new Interceptor() {
+            @Override
+            public Response intercept(Chain chain) throws IOException {
+                Request original = chain.request();
 
-            // Customize the request
-            Request request = original.newBuilder()
-                    .header("Accept", "application/json")
-                    .method(original.method(), original.body())
-                    .build();
+                // Customize the request
+                Request request = original.newBuilder()
+                        .header("Accept", "application/json")
+                        .method(original.method(), original.body())
+                        .build();
 
-            Response response = chain.proceed(request);
+                Response response = chain.proceed(request);
 
-            return response;
+                return response;
+            }
         });
 
         OkHttpClient OkHttpClient = httpClient.build();
@@ -41,7 +45,6 @@ public class APIServiceFactory {
         Retrofit retrofit = new Retrofit.Builder()
                 .baseUrl(BASE_URL)
                 .addConverterFactory(new NullOnEmptyConverterFactory())
-                .addConverterFactory(ScalarsConverterFactory.create())
                 .addConverterFactory(GsonConverterFactory.create())
                 .client(OkHttpClient)
                 .build();

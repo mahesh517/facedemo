@@ -21,6 +21,9 @@ import retrofit2.http.Part;
 public interface ApiService {
 
 
+    @POST("auth/login")
+    Call<Login> checklogin(@Body LoginHeader loginHeader);
+
     @POST("auth/searchWithEncodedImage")
     Call<FaceSearch> getresult(@Body SearchHeaderr searchHeader);
 

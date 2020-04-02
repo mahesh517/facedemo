@@ -1,7 +1,6 @@
-
-
 package com.app.detection;
 
+import android.content.Intent;
 import android.graphics.Bitmap;
 import android.graphics.Bitmap.Config;
 import android.graphics.Canvas;
@@ -12,55 +11,60 @@ import android.graphics.Paint.Style;
 import android.graphics.RectF;
 import android.graphics.Typeface;
 import android.media.ImageReader.OnImageAvailableListener;
+import android.os.Bundle;
+import android.os.CountDownTimer;
+import android.os.Handler;
 import android.os.SystemClock;
 import android.provider.Settings;
-import android.util.Base64;
 import android.util.Log;
 import android.util.Size;
+import android.util.SparseArray;
 import android.util.TypedValue;
 import android.view.View;
 import android.widget.Toast;
 
-import com.app.detection.ResponseModel.FaceSearchResponse;
 import com.app.detection.ServiceApi.APIServiceFactory;
 import com.app.detection.ServiceApi.ApiService;
 import com.app.detection.customview.CustomDialog;
 import com.app.detection.customview.OverlayView;
 import com.app.detection.customview.OverlayView.DrawCallback;
+import com.app.detection.customview.TextSpeech;
 import com.app.detection.env.BorderedText;
 import com.app.detection.env.ImageUtils;
 import com.app.detection.env.Logger;
-import com.app.detection.model.AddUserResponse;
-import com.app.detection.model.FaceSearch;
-import com.app.detection.model.ManualAddUser;
 import com.app.detection.model.SdkLicense.License;
 import com.app.detection.model.SdkLicense.LicenseHeader;
-import com.app.detection.model.SearchHeaderr;
 import com.app.detection.tflite.Classifier;
 import com.app.detection.tflite.TFLiteObjectDetectionAPIModel;
 import com.app.detection.tracking.MultiBoxTracker;
 import com.app.detection.tracking.Svd;
-import com.google.gson.Gson;
+import com.google.android.gms.vision.Frame;
+import com.google.android.gms.vision.face.Face;
+import com.google.android.gms.vision.face.FaceDetector;
 
 import org.json.JSONException;
 import org.json.JSONObject;
 import org.opencv.android.Utils;
+import org.opencv.core.Core;
+import org.opencv.core.CvType;
 import org.opencv.core.Mat;
+import org.opencv.core.MatOfInt;
+import org.opencv.core.Scalar;
 import org.opencv.imgproc.Imgproc;
 
-import java.io.ByteArrayOutputStream;
 import java.io.File;
-import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
-import java.text.SimpleDateFormat;
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Calendar;
 import java.util.Collections;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.TimerTask;
+import java.util.zip.ZipEntry;
+import java.util.zip.ZipInputStream;
 
 import okhttp3.MediaType;
 import okhttp3.MultipartBody;
@@ -82,22 +86,34 @@ public class DetectorActivity extends CameraActivity implements OnImageAvailable
     // Minimum detection confidence to track a detection.
     private static final float MINIMUM_CONFIDENCE_TF_OD_API = 0.9f;
     private static final boolean MAINTAIN_ASPECT = false;
-    private static final Size DESIRED_PREVIEW_SIZE = new Size(1920, 1080);
+    private static final Size DESIRED_PREVIEW_SIZE = new Size(1280, 720);
     private static final boolean SAVE_PREVIEW_BITMAP = true;
     private static final float TEXT_SIZE_DIP = 10;
     OverlayView trackingOverlay;
     private Integer sensorOrientation;
 
+
     private Classifier detector;
 
-    BitmapImageAdapter bitmapImageAdapter;
+
+    boolean eye_blink = false, unitform_status, uniform_process = false, face_detect = false;
+
+    double smileProbabality;
+
+    TimerTask timerTask;
+
+    CountDownTimer countDownTimer, repeatCountDowntimer;
+
 
     ApiService apiService, manualAPiService;
 
     private long lastProcessingTimeMs;
     private Bitmap rgbFrameBitmap = null;
+    private Bitmap originialFrameBitmap = null;
     private Bitmap croppedBitmap = null;
     private Bitmap cropCopyBitmap = null;
+    private Bitmap uniformBitmap = null;
+    private Bitmap facebitmap = null;
 
     private boolean computingDetection = false;
     private ArrayList<Bitmap> facesBitmap;
@@ -109,15 +125,45 @@ public class DetectorActivity extends CameraActivity implements OnImageAvailable
     private MultiBoxTracker tracker;
 
     private RectF boundRect;
-    ImagePreviewAdapter imagePreviewAdapter;
 
     private Matrix frameToDisplayMatrix;
     private int widthofSurfaceView;
     private int heightofSurfaceView;
-
-
     CustomDialog alertDialog;
     JSONObject fileObject = null;
+    JSONObject resultObject;
+    String base64image;
+    LoginPrefManager loginPrefManager;
+    List<RectF> rectLocations = new ArrayList<>();
+
+    private static final double SMILING_PROB_THRESHOLD = .15;
+    private static final double EYE_OPEN_PROB_THRESHOLD = .5;
+    private static final double EYE_OPEN_THRESHOLD = 0.8;
+    private static final double EYE_CLOSED_THRESHOLD = 0.6;
+    private static final double EYE_REOPEN_THRESHOLD = 0.7;
+
+    private int eye_counter = 0;
+    private boolean eye_open = false;
+
+
+    long requestTime = 5000;
+
+
+    private boolean eye_detection_need = true;
+    private boolean uniform_detection_need = true;
+    private boolean smile_detection_need = true;
+    private boolean final_process = false;
+
+
+    int lower_h = 170;
+    int lower_s = 100;
+    int upper_h = 180;
+    int upper_s = 255;
+
+    long reuest_time = 5000;
+
+    Bundle input_bundle;
+
 
     @Override
     public void onPreviewSizeChosen(final Size size, final int rotation, final RectF rectf, final int width, final int height) {
@@ -131,28 +177,71 @@ public class DetectorActivity extends CameraActivity implements OnImageAvailable
         manualAPiService = APIServiceFactory.getRetrofit().create(ApiService.class);
         facesBitmap = new ArrayList<>();
 
-
+        loginPrefManager = new LoginPrefManager(DetectorActivity.this);
         LicenseHeader licenseHeader = new LicenseHeader();
 
+
+        Bundle bundle = getIntent().getExtras();
+        input_bundle = new Bundle();
+
+        if (bundle != null) {
+
+
+            if (bundle.containsKey("eye_detection")) {
+                eye_detection_need = bundle.getBoolean("eye_detection");
+            }
+            if (bundle.containsKey("uniform_detection")) {
+                uniform_detection_need = bundle.getBoolean("uniform_detection");
+
+                if (!uniform_detection_need) {
+                    uniform_process = true;
+                }
+            }
+            if (bundle.containsKey("smile_detection")) {
+                smile_detection_need = bundle.getBoolean("smile_detection");
+            }
+            if (bundle.containsKey("time_out")) {
+                requestTime = bundle.getLong("time_out");
+            }
+            if (bundle.containsKey("lower_H_color_range")) {
+                lower_h = bundle.getInt("lower_H_color_range");
+            }
+            if (bundle.containsKey("upper_H_color_range")) {
+                upper_h = bundle.getInt("upper_H_color_range");
+            }
+            if (bundle.containsKey("lower_S_color_range")) {
+                lower_s = bundle.getInt("lower_S_color_range");
+            }
+            if (bundle.containsKey("upper_S_color_range")) {
+                upper_s = bundle.getInt("upper_S_color_range");
+            }
+
+
+        }
+
+        input_bundle.putLong("time_out", requestTime);
+        input_bundle.putBoolean("eye_detection", eye_detection_need);
+        input_bundle.putBoolean("smile_detection", smile_detection_need);
+        input_bundle.putBoolean("eye_detection", eye_detection_need);
+        input_bundle.putInt("lower_H_color_range", lower_h);
+        input_bundle.putInt("upper_H_color_range", upper_h);
+        input_bundle.putInt("lower_S_color_range", lower_s);
+        input_bundle.putInt("upper_S_color_range", upper_s);
         tracker = new MultiBoxTracker(this);
-
-
-//        try {
-//            fileObject = new JSONObject(readJSONFromAsset());
-//        } catch (JSONException e) {
-//            e.printStackTrace();
-//        }
+        try {
+            fileObject = new JSONObject(readJSONFromAsset());
+        } catch (JSONException e) {
+            e.printStackTrace();
+        }
 
 
         if (fileObject == null) {
-
-//            callBlankFragment();
-
-//            Toast.makeText(this, "Please add your admin json file", Toast.LENGTH_SHORT).show();
+            callBlankFragment();
+            showAlert("Please add your admin json file");
+            Toast.makeText(this, "Please add your admin json file", Toast.LENGTH_SHORT).show();
 
         } else {
             Log.e("fileObject", fileObject.toString());
-
             JSONObject configuration = null;
             try {
                 configuration = fileObject.getJSONObject("config");
@@ -165,29 +254,27 @@ public class DetectorActivity extends CameraActivity implements OnImageAvailable
                 licenseHeader.setDevice_id(android_id);
                 licenseHeader.setDevice_type("android");
                 try {
-                    licenseHeader.setType_of_sdk(configuration.getJSONObject("type_of_sdk").toString());
-                    licenseHeader.setUser_id(configuration.getJSONObject("user_id").toString());
-                    licenseHeader.setPackagename(configuration.getJSONObject("package_name").toString());
+                    licenseHeader.setType_of_sdk(configuration.getString("type_of_sdk"));
+                    licenseHeader.setUser_id(configuration.getString("user_id"));
+                    licenseHeader.setPackagename(configuration.getString("package_name"));
                 } catch (JSONException e) {
                     e.printStackTrace();
                 }
-
-
-                Log.e("licenseHeader", new Gson().toJson(licenseHeader));
-
-                if (licenseHeader != null) {
-//                    checkLicense(licenseHeader);
-                }
-
-
             }
-
-
+            if (licenseHeader != null) {
+                checkLicense(licenseHeader);
+            }
         }
         int cropSize = TF_OD_API_INPUT_SIZE;
 
         try {
-            detector = TFLiteObjectDetectionAPIModel.create(getAssets(), TF_OD_API_MODEL_FILE, TF_OD_API_LABELS_FILE, TF_OD_API_INPUT_SIZE, TF_OD_API_IS_QUANTIZED);
+            File file = new File(getExternalFilesDir("Data") + "/face_mv2_ssd_quant_8bit.tflite");
+            if (file.exists()) {
+            } else {
+                unzipUpdateToCache();
+            }
+//            detector = TFLiteObjectDetectionAPIModel.create(getAssets(), TF_OD_API_MODEL_FILE, TF_OD_API_LABELS_FILE, TF_OD_API_INPUT_SIZE, TF_OD_API_IS_QUANTIZED);
+            detector = TFLiteObjectDetectionAPIModel.Newcreate(getAssets(), TF_OD_API_MODEL_FILE, TF_OD_API_LABELS_FILE, TF_OD_API_INPUT_SIZE, TF_OD_API_IS_QUANTIZED, file);
             cropSize = TF_OD_API_INPUT_SIZE;
         } catch (final IOException e) {
             e.printStackTrace();
@@ -212,7 +299,7 @@ public class DetectorActivity extends CameraActivity implements OnImageAvailable
         cropToFrameTransform = new Matrix();
         frameToCropTransform.invert(cropToFrameTransform);
 
-        trackingOverlay = (OverlayView) findViewById(R.id.tracking_overlay);
+        trackingOverlay = findViewById(R.id.tracking_overlay);
 
         trackingOverlay.addCallback(
                 new DrawCallback() {
@@ -228,13 +315,34 @@ public class DetectorActivity extends CameraActivity implements OnImageAvailable
         tracker.setFrameConfiguration(previewWidth, previewHeight, sensorOrientation);
     }
 
+    private void checkLicense(final LicenseHeader licenseHeader) {
+        apiService.checkLicense(licenseHeader).enqueue(new Callback<License>() {
+            @Override
+            public void onResponse(Call<License> call, Response<License> response) {
+
+                if (response.raw().code() == 200) {
+                    loginPrefManager.setUserToken(licenseHeader.getUser_id());
+                } else {
+                    setFragment();
+                    showAlert("Please use valid json file");
+                }
+            }
+
+            @Override
+            public void onFailure(Call<License> call, Throwable t) {
+                showAlert(t.getMessage());
+            }
+        });
+    }
+
     @Override
     protected void processImage() {
+
+
         ++timestamp;
         final long currTimestamp = timestamp;
         trackingOverlay.postInvalidate();
 
-        // No mutex needed as this method is not reentrant.
         if (computingDetection) {
             readyForNextImage();
             return;
@@ -244,22 +352,26 @@ public class DetectorActivity extends CameraActivity implements OnImageAvailable
 
         rgbFrameBitmap.setPixels(getRgbBytes(), 0, previewWidth, 0, 0, previewWidth, previewHeight);
 
+        originialFrameBitmap = rgbFrameBitmap;
+
+        Matrix matrix1 = new Matrix();
+        matrix1.postRotate(270);
+        originialFrameBitmap = Bitmap.createBitmap(originialFrameBitmap, 0, 0, rgbFrameBitmap.getWidth(), rgbFrameBitmap.getHeight(), matrix1, true);
+
         readyForNextImage();
 
         final Canvas canvas = new Canvas(croppedBitmap);
         canvas.drawBitmap(rgbFrameBitmap, frameToCropTransform, null);
-        // For examining the actual TF input.
-        if (SAVE_PREVIEW_BITMAP) {
-//      ImageUtils.saveBitmap(croppedBitmap);
-        }
+
 
         runInBackground(
                 new Runnable() {
                     @Override
                     public void run() {
                         LOGGER.i("Running detection on image " + currTimestamp);
-                        final long startTime = SystemClock.uptimeMillis();
 
+                        Log.e("Running image", "" + currTimestamp);
+                        final long startTime = SystemClock.uptimeMillis();
 
                         final List<Classifier.Recognition> results = detector.recognizeImage(croppedBitmap);
                         lastProcessingTimeMs = SystemClock.uptimeMillis() - startTime;
@@ -271,6 +383,7 @@ public class DetectorActivity extends CameraActivity implements OnImageAvailable
                         paint.setStyle(Style.STROKE);
                         paint.setStrokeWidth(2.0f);
 
+
                         float minimumConfidence = MINIMUM_CONFIDENCE_TF_OD_API;
                         switch (MODE) {
                             case TF_OD_API:
@@ -279,17 +392,58 @@ public class DetectorActivity extends CameraActivity implements OnImageAvailable
                         }
 
 
+                        FaceDetector detector1 = new FaceDetector.Builder(DetectorActivity.this)
+                                .setTrackingEnabled(false)
+                                .setLandmarkType(FaceDetector.ALL_LANDMARKS)
+                                .setClassificationType(FaceDetector.ALL_CLASSIFICATIONS)
+                                .build();
+                        Frame frame = new Frame.Builder().setBitmap(croppedBitmap).build();
+                        SparseArray<Face> faces = detector1.detect(frame);
+
+
+                        if (smile_detection_need) {
+
+                            if (faces.size() > 0) {
+                                Face mFace = faces.valueAt(0);
+                                smileProbabality = mFace.getIsSmilingProbability();
+                            }
+                        }
+
+
+                        if (faces.size() > 0 && eye_detection_need) {
+
+                            String update = null;
+                            for (int i = 0; i < faces.size(); ++i) {
+                                Face mFace = faces.valueAt(i);
+
+                                double left_eye_value = mFace.getIsLeftEyeOpenProbability();
+                                double right_eye_value = mFace.getIsRightEyeOpenProbability();
+                                double avg_eye = (left_eye_value + right_eye_value) / 2;
+
+
+                                Log.e("avg_eye", "--" + avg_eye);
+
+                                if (avg_eye < EYE_CLOSED_THRESHOLD) {
+                                    Log.e("big eye", "eye closed");
+                                    eye_blink = true;
+                                    eye_counter = 0;
+
+                                }
+
+                            }
+                        }
+
+
                         final int[] outside = {0};
+
 
                         final List<Classifier.Recognition> mappedRecognitions = new LinkedList<Classifier.Recognition>();
 
                         for (final Classifier.Recognition result : results) {
                             final RectF location = result.getLocation();
                             if (location != null && result.getConfidence() >= minimumConfidence) {
-//                                canvas.drawCircle( location.bottom, location.left,5, paint);
 
 
-                                Log.e("face_corrdinates", Float.toString(location.left) + " " + Float.toString(location.right));
                                 location.left = 300 - location.left;
                                 location.right = 300 - location.right;
                                 cropToFrameTransform.mapRect(location);
@@ -297,22 +451,11 @@ public class DetectorActivity extends CameraActivity implements OnImageAvailable
                                 mappedRecognitions.add(result);
 
 
-                                int frameWidth = (int) previewWidth;
-                                int frameHeight = (int) previewHeight;
+                                int frameWidth = previewWidth;
+                                int frameHeight = previewHeight;
                                 final boolean rotated = sensorOrientation % 180 == 90;
-                                final float multiplier =
-                                        Math.min(
-
-                                                (float) heightofSurfaceView / (float) (rotated ? frameWidth : frameHeight),
-                                                (float) widthofSurfaceView / (float) (rotated ? frameHeight : frameWidth));
-                                frameToDisplayMatrix =
-                                        ImageUtils.getTransformationMatrix(
-                                                frameWidth,
-                                                frameHeight,
-                                                (int) (multiplier * (rotated ? frameHeight : frameWidth)),
-                                                (int) (multiplier * (rotated ? frameWidth : frameHeight)),
-                                                sensorOrientation,
-                                                false);
+                                final float multiplier = Math.min((float) heightofSurfaceView / (float) (rotated ? frameWidth : frameHeight), (float) widthofSurfaceView / (float) (rotated ? frameHeight : frameWidth));
+                                frameToDisplayMatrix = ImageUtils.getTransformationMatrix(frameWidth, frameHeight, (int) (multiplier * (rotated ? frameHeight : frameWidth)), (int) (multiplier * (rotated ? frameWidth : frameHeight)), sensorOrientation, false);
                                 final RectF positionOnDisplay = new RectF(result.getLocation());
                                 frameToDisplayMatrix.mapRect(positionOnDisplay);
 //
@@ -320,13 +463,22 @@ public class DetectorActivity extends CameraActivity implements OnImageAvailable
 //                                Log.e("maaaaap1",""+ boundRect);
                                 mappedRecognitions.add(result);
                                 if (boundRect.left < positionOnDisplay.left && boundRect.right > positionOnDisplay.right && boundRect.top < positionOnDisplay.top && boundRect.bottom > positionOnDisplay.bottom) {
-                                    Log.e("maaaaap3", "" + "Inside");
+//                                    Log.e("maaaaap3", "" + "Inside");
                                     int areaofBounds = (int) ((boundRect.left - boundRect.right) * (boundRect.top - boundRect.bottom));
                                     int areaofDetected = (int) ((positionOnDisplay.left - positionOnDisplay.right) * (positionOnDisplay.top - positionOnDisplay.bottom));
                                     if (areaofDetected > areaofBounds / 2.5) {
-                                        Log.e("maaaaap", "" + "Just Right");
+//                                        Log.e("maaaaap", "" + "Just Right");
                                     } else {
-                                        Log.e("maaaaap", "" + "Tooooo faaar");
+
+                                        runOnUiThread(new Runnable() {
+                                            @Override
+                                            public void run() {
+                                                warning_text.setVisibility(View.VISIBLE);
+                                                outside[0] = 0;
+                                                warning_text.setText("Please come near to camera");
+//                                                Log.e("maaaaap", "" + "Tooooo faaar");
+                                            }
+                                        });
                                     }
                                     runOnUiThread(new Runnable() {
                                         @Override
@@ -342,11 +494,12 @@ public class DetectorActivity extends CameraActivity implements OnImageAvailable
                                     runOnUiThread(new Runnable() {
                                         @Override
                                         public void run() {
+
+                                            warning_text.setText("Please come near to bounding box");
                                             warning_text.setVisibility(View.VISIBLE);
                                             outside[0] = 0;
                                         }
                                     });
-                                    Log.e("maaaaap4", "" + "Outside");
                                 }
 
 
@@ -354,30 +507,21 @@ public class DetectorActivity extends CameraActivity implements OnImageAvailable
 
 
                                 try {
-
-
                                     int x1 = (int) location.left - 20;
                                     int y1 = (int) location.top - 20;
                                     int x2 = (int) location.right;
                                     int y2 = (int) location.bottom;
                                     int width = Math.abs(x2 - x1) + 40;
                                     int height = Math.abs(y2 - y1) + 40;
-                                    Log.e("width", Integer.toString(width) + " " + Integer.toString(height));
+//                                    Log.e("width", width + " " + height);
                                     Matrix matrix = new Matrix();
                                     matrix.postScale(1, -1, rgbFrameBitmap.getWidth() / 2, rgbFrameBitmap.getHeight() / 2);
                                     croppedBmp = Bitmap.createBitmap(rgbFrameBitmap, 0, 0, rgbFrameBitmap.getWidth(), rgbFrameBitmap.getHeight(), matrix, true);
                                     croppedBmp = Bitmap.createBitmap(croppedBmp, x1, y1, width, height);
                                     Matrix matrix1 = new Matrix();
                                     matrix1.postRotate(270);
-//
                                     croppedBmp = Bitmap.createBitmap(croppedBmp, 0, 0, croppedBmp.getWidth(), croppedBmp.getHeight(), matrix1, true);
-
-                                    //
-
-
                                 } catch (Exception e) {
-
-
                                     Log.e("exce", e.getMessage());
                                 }
 
@@ -386,23 +530,18 @@ public class DetectorActivity extends CameraActivity implements OnImageAvailable
 
                                     if (outside[0] == 1) {
                                         facesBitmap.add(croppedBmp);
+                                        rectLocations.add(location);
+
+
+                                        if (facesBitmap.size() == 1) {
+                                            face_detect = true;
+                                            initializeTimerTask();
+                                        }
                                     }
 
 
-                                    bitmapImageAdapter = new BitmapImageAdapter(DetectorActivity.this, facesBitmap);
+                                    if (facesBitmap.size() == 5) {
 
-                                    runOnUiThread(new Runnable() {
-                                        @Override
-                                        public void run() {
-                                            recyclerView.setAdapter(bitmapImageAdapter);
-                                        }
-                                    });
-
-                                    if (facesBitmap.size() == 10) {
-
-//                                        setFragment();
-
-                                        callBlankFragment();
                                         getBestImage();
                                     }
                                 }
@@ -417,17 +556,6 @@ public class DetectorActivity extends CameraActivity implements OnImageAvailable
 
                         computingDetection = false;
 
-                        runOnUiThread(
-                                new Runnable() {
-                                    @Override
-                                    public void run() {
-//                                        showFrameInfo(previewWidth + "x" + previewHeight);
-//                                        showCropInfo(cropCopyBitmap.getWidth() + "x" + cropCopyBitmap.getHeight());
-//                                        showInference(lastProcessingTimeMs + "ms");
-
-
-                                    }
-                                });
                     }
                 });
     }
@@ -442,27 +570,35 @@ public class DetectorActivity extends CameraActivity implements OnImageAvailable
         return DESIRED_PREVIEW_SIZE;
     }
 
-    // Which detection model to use: by default uses Tensorflow Object Detection API frozen
-    // checkpoints.
+
     private enum DetectorMode {
-        TF_OD_API;
+        TF_OD_API
     }
 
     @Override
     protected void setUseNNAPI(final boolean isChecked) {
-        runInBackground(() -> detector.setUseNNAPI(isChecked));
+        runInBackground(new Runnable() {
+            @Override
+            public void run() {
+                detector.setUseNNAPI(isChecked);
+            }
+        });
     }
 
     @Override
     protected void setNumThreads(final int numThreads) {
-        runInBackground(() -> detector.setNumThreads(numThreads));
+        runInBackground(new Runnable() {
+            @Override
+            public void run() {
+                detector.setNumThreads(numThreads);
+            }
+        });
     }
 
 
     private void getBestImage() {
         List<Double> avg_bitmap = new ArrayList<>();
 
-        Log.e("facesBitmap", "" + facesBitmap.size());
 
         for (int k = 0; k < facesBitmap.size(); k++) {
             try {
@@ -499,244 +635,48 @@ public class DetectorActivity extends CameraActivity implements OnImageAvailable
                     }
                 }
                 avg_bitmap.add(first_ten / total_sum);
-                Log.e("avg", "--" + first_ten / total_sum);
             } catch (Exception e) {
-                Log.e("best_exception", e.getMessage());
             }
         }
 
         int minIndex = avg_bitmap.indexOf(Collections.min(avg_bitmap));
         Collections.sort(avg_bitmap);
-        Log.e("final_bestavg", "--" + avg_bitmap.get(0));
-        Log.e("avgminindex", "--" + minIndex);
 
-        Bitmap faceCroped = facesBitmap.get(minIndex);
-        if (faceCroped != null) {
-            runOnUiThread(new Runnable() {
-                @Override
-                public void run() {
-                    getFaceresult(getBase64String(faceCroped), faceCroped);
-                }
-            });
-        }
-    }
+        final Bitmap faceCroped = facesBitmap.get(minIndex);
 
 
-    private String getBase64String(Bitmap bitmap) {
-        ByteArrayOutputStream baos = new ByteArrayOutputStream();
-        bitmap.compress(Bitmap.CompressFormat.JPEG, 100, baos);
-        byte[] imageBytes = baos.toByteArray();
-        return Base64.encodeToString(imageBytes, Base64.NO_WRAP);
-    }
+        RectF rectF = rectLocations.get(minIndex);
 
 
-    public void getFaceresult(String base64String, Bitmap faceCroped) {
-        try {
+        if (rectF != null) {
+            try {
+                int x1 = (int) rectF.left;
+                int y1 = (int) rectF.top;
+                int x2 = (int) rectF.right;
+                int y2 = (int) rectF.bottom;
 
-            SearchHeaderr searchHeaderr = new SearchHeaderr();
-            searchHeaderr.setImage_encoded(base64String);
-            searchHeaderr.setUser_id("5d0a8ef72ad9c04228140739");
+                int croped_height = originialFrameBitmap.getHeight() - (y2 + y1);
 
+                int y3 = y2 + y1;
+                final Bitmap croppedBmp = Bitmap.createBitmap(originialFrameBitmap, 0, y3 + 80, originialFrameBitmap.getWidth(), croped_height - 80);
 
-//            generateNoteOnSD(DetectorActivity.this, System.currentTimeMillis() + ".txt", base64String);
-            apiService.getresult(searchHeaderr).enqueue(new Callback<FaceSearch>() {
-                @Override
-                public void onResponse(Call<FaceSearch> call, Response<FaceSearch> response) {
-                    if (response.raw().code() == 200 && response.body().getStatus().equalsIgnoreCase("ok")) {
-
-                        List<com.app.detection.model.User> users = response.body().getData().getUser();
-                        if (users.size() > 0) {
-                            String id = null;
-                            for (com.app.detection.model.User user : users) {
-                                id = user.getId();
-                                Log.e("user", new Gson().toJson(user));
-                                String jsonResponse = new Gson().toJson(user);
-                                JSONObject jsonObject = null;
-                                try {
-                                    jsonObject = new JSONObject(jsonResponse);
-                                } catch (JSONException e) {
-                                    e.printStackTrace();
-                                }
-                                SimpleDateFormat simpleDateFormat = new SimpleDateFormat("yyyy-MM-dd");
-                                Calendar calendar = Calendar.getInstance();
-                                String image_url = APIServiceFactory.BASE_URL + user.getFileDirectory();
-
-                                facesBitmap.clear();
-
-
-                                List<String> imageUrl = new ArrayList<>();
-
-                                imageUrl.add(image_url);
-
-                                imagePreviewAdapter = new ImagePreviewAdapter(DetectorActivity.this, imageUrl, new ImagePreviewAdapter.ViewHolder.OnItemClickListener() {
-                                    @Override
-                                    public void onClick(View v, int position) {
-
-                                    }
-                                });
-
-
-                                runOnUiThread(new Runnable() {
-                                    @Override
-                                    public void run() {
-
-                                        recyclerView.setAdapter(imagePreviewAdapter);
-                                    }
-                                });
-                                if (jsonObject.has("person_name")) {
-
-
-                                    break;
-                                }
-                            }
-
-                            setFragment();
-                        } else {
-
-
-//                            Toast.makeText(DetectorActivity.this, "" + response.body().getMessage(), Toast.LENGTH_SHORT).show();
+                runOnUiThread(new Runnable() {
+                    @Override
+                    public void run() {
+                        if (uniform_detection_need) {
+                            process(croppedBmp, faceCroped);
                         }
-                    } else {
-
-
-                        sendDetails(createfile(faceCroped), 0);
-                        Toast.makeText(DetectorActivity.this, "" + response.body().getMessage(), Toast.LENGTH_SHORT).show();
-
-
                     }
-                }
+                });
 
-                @Override
-                public void onFailure(Call<FaceSearch> call, Throwable t) {
-                    Log.e("onFailure", t.getMessage());
-                }
-            });
-        } catch (Exception e) {
-            Log.e("Exception", e.getMessage());
+            } catch (Exception e) {
+                Log.e("exce", e.getMessage());
+            }
+
         }
+
+
     }
-
-
-    public FaceSearchResponse getFaceresultManual(String base64String) {
-
-
-        FaceSearchResponse faceSearch = new FaceSearchResponse();
-        try {
-
-            SearchHeaderr searchHeaderr = new SearchHeaderr();
-            searchHeaderr.setImage_encoded(base64String);
-            searchHeaderr.setUser_id("5d0a8ef72ad9c04228140739");
-
-
-//            generateNoteOnSD(DetectorActivity.this, System.currentTimeMillis() + ".txt", base64String);
-            manualAPiService.getresult(searchHeaderr).enqueue(new Callback<FaceSearch>() {
-                @Override
-                public void onResponse(Call<FaceSearch> call, Response<FaceSearch> response) {
-
-
-                    faceSearch.setResponseCode(response.raw().code());
-                    faceSearch.setData(response.body().getData());
-                    faceSearch.setMeesage(response.body().getMessage());
-                    if (response.raw().code() == 200 && response.body().getStatus().equalsIgnoreCase("ok")) {
-
-                        List<com.app.detection.model.User> users = response.body().getData().getUser();
-                        if (users.size() > 0) {
-                            String id = null;
-                            for (com.app.detection.model.User user : users) {
-                                id = user.getId();
-                                Log.e("user", new Gson().toJson(user));
-                                String jsonResponse = new Gson().toJson(user);
-                                JSONObject jsonObject = null;
-                                try {
-                                    jsonObject = new JSONObject(jsonResponse);
-                                } catch (JSONException e) {
-                                    e.printStackTrace();
-                                }
-                                SimpleDateFormat simpleDateFormat = new SimpleDateFormat("yyyy-MM-dd");
-                                Calendar calendar = Calendar.getInstance();
-                                String image_url = APIServiceFactory.BASE_URL + user.getFileDirectory();
-
-                                facesBitmap.clear();
-
-
-                                List<String> imageUrl = new ArrayList<>();
-
-                                imageUrl.add(image_url);
-
-                                imagePreviewAdapter = new ImagePreviewAdapter(DetectorActivity.this, imageUrl, new ImagePreviewAdapter.ViewHolder.OnItemClickListener() {
-                                    @Override
-                                    public void onClick(View v, int position) {
-
-                                    }
-                                });
-
-
-                                runOnUiThread(new Runnable() {
-                                    @Override
-                                    public void run() {
-
-                                        recyclerView.setAdapter(imagePreviewAdapter);
-                                    }
-                                });
-                                if (jsonObject.has("person_name")) {
-
-
-                                    break;
-                                }
-                            }
-
-                            setFragment();
-                        } else {
-                            Toast.makeText(DetectorActivity.this, "" + response.body().getMessage(), Toast.LENGTH_SHORT).show();
-                        }
-                    } else {
-
-                        Toast.makeText(DetectorActivity.this, "" + response.body().getMessage(), Toast.LENGTH_SHORT).show();
-
-                        setFragment();
-
-                    }
-
-
-                }
-
-
-                @Override
-                public void onFailure(Call<FaceSearch> call, Throwable t) {
-                    Log.e("onFailure", t.getMessage());
-
-                    faceSearch.setResponseCode(401);
-                    faceSearch.setData(null);
-                    faceSearch.setMeesage("onFailure" + t.getLocalizedMessage());
-                }
-            });
-        } catch (Exception e) {
-
-            faceSearch.setResponseCode(101);
-            faceSearch.setData(null);
-            faceSearch.setMeesage(e.getLocalizedMessage());
-            Log.e("Exception", e.getMessage());
-        }
-        return faceSearch;
-    }
-
-
-//    public void generateNoteOnSD(Context context, String sFileName, String sBody) {
-//        try {
-//            File root = new File(Environment.getExternalStorageDirectory(), "Notes");
-//            if (!root.exists()) {
-//                root.mkdirs();
-//            }
-//            File gpxfile = new File(root, sFileName);
-//            FileWriter writer = new FileWriter(gpxfile);
-//            writer.append(sBody);
-//            writer.flush();
-//            writer.close();
-//            Toast.makeText(context, "Saved", Toast.LENGTH_SHORT).show();
-//        } catch (IOException e) {
-//            e.printStackTrace();
-//        }
-//    }
 
 
     public String readJSONFromAsset() {
@@ -747,41 +687,12 @@ public class DetectorActivity extends CameraActivity implements OnImageAvailable
             byte[] buffer = new byte[size];
             is.read(buffer);
             is.close();
-            json = new String(buffer, "UTF-8");
+            json = new String(buffer, StandardCharsets.UTF_8);
         } catch (IOException ex) {
             ex.printStackTrace();
             return null;
         }
         return json;
-    }
-
-
-    private File createfile(Bitmap bitmp) {
-        File f = new File(getCacheDir(), System.currentTimeMillis() + ".jpg");
-        try {
-            f.createNewFile();
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-        Bitmap bitmap = bitmp;
-        ByteArrayOutputStream bos = new ByteArrayOutputStream();
-        bitmap.compress(Bitmap.CompressFormat.JPEG, 100 /*ignored for PNG*/, bos);
-        byte[] bitmapdata = bos.toByteArray();
-
-        FileOutputStream fos = null;
-        try {
-            fos = new FileOutputStream(f);
-        } catch (FileNotFoundException e) {
-            e.printStackTrace();
-        }
-        try {
-            fos.write(bitmapdata);
-            fos.flush();
-            fos.close();
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-        return f;
     }
 
 
@@ -792,124 +703,13 @@ public class DetectorActivity extends CameraActivity implements OnImageAvailable
     }
 
 
-    public void sendDetails(File file, int position) {
-        try {
-
-
-            RequestBody user_id = RequestBody.create(MediaType.parse("multipart/form-data"), "5d0a8ef72ad9c04228140739");
-            apiService.addNewUser(prepareFilePart(file.getAbsolutePath()), user_id).enqueue(new Callback<ManualAddUser>() {
-                @Override
-                public void onResponse(Call<ManualAddUser> call, Response<ManualAddUser> response) {
-                    try {
-                        if (position == 0) {
-                            setFragment();
-                        } else {
-                            Toast.makeText(DetectorActivity.this, "" + response.body().getMessage(), Toast.LENGTH_SHORT).show();
-                        }
-                    } catch (Exception e) {
-                        Log.e("Exception", e.getMessage());
-                    }
-                }
-
-                @Override
-                public void onFailure(Call<ManualAddUser> call, Throwable t) {
-                    try {
-                        if (position == 0) {
-                            setFragment();
-                        } else {
-                            Toast.makeText(DetectorActivity.this, "" + t.getMessage(), Toast.LENGTH_SHORT).show();
-                        }
-                    } catch (Exception e) {
-                    }
-                }
-            });
-        } catch (Exception e) {
-
-            Toast.makeText(DetectorActivity.this, "Exception in :" + e.getMessage(), Toast.LENGTH_SHORT).show();
-
-        }
-    }
-
-
-    public void senWithApproval(String imagePath, String username) {
-//        try {
-
-        Log.e("path", imagePath + "/" + username);
-
-        RequestBody user_id = RequestBody.create(MediaType.parse("multipart/form-data"), "5d0a8ef72ad9c04228140739");
-        RequestBody name = RequestBody.create(MediaType.parse("multipart/form-data"), username);
-
-        apiService.saveNewUser(prepareFilePart(imagePath), name, user_id).enqueue(new Callback<AddUserResponse>() {
-            @Override
-            public void onResponse(Call<AddUserResponse> call, Response<AddUserResponse> response) {
-
-
-                Log.e("response", new Gson().toJson(response.body()));
-                Log.e("code", new Gson().toJson(response.raw().code()));
-
-                if (response.raw().code() == 200 && response.body().getStatus().equalsIgnoreCase("ok")) {
-
-                    Toast.makeText(DetectorActivity.this, "" + response.body().getMessage(), Toast.LENGTH_SHORT).show();
-
-//                        startActivity(new Intent(DetectorActivity.this, DetectorActivity.class));
-//                        finish();
-                } else {
-                    Toast.makeText(DetectorActivity.this, "Fail :" + response.body().getMessage(), Toast.LENGTH_SHORT).show();
-                }
-
-            }
-
-            @Override
-            public void onFailure(Call<AddUserResponse> call, Throwable t) {
-
-                try {
-                    Toast.makeText(DetectorActivity.this, "" + t.getMessage(), Toast.LENGTH_SHORT).show();
-
-                } catch (Exception e) {
-
-                }
-
-            }
-        });
-
-    }
-//        catch (Exception e) {
-
-//            Log.e("Exception", e.getMessage());
-//        }
-
-
-    public void checkLicense(LicenseHeader licenseHeader) {
-
-        apiService.checkLicense(licenseHeader).enqueue(new Callback<License>() {
-            @Override
-            public void onResponse(Call<License> call, Response<License> response) {
-
-
-                if (response.raw().code() == 200) {
-
-                } else {
-
-                    callBlankFragment();
-                    showAlert(response.body().getMessage());
-                }
-
-            }
-
-            @Override
-            public void onFailure(Call<License> call, Throwable t) {
-
-            }
-        });
-
-    }
-
-
     public void showAlert(String message) {
 
         alertDialog = new CustomDialog(DetectorActivity.this, R.style.AppTheme, message, new CustomDialog.CloseonCall() {
             @Override
             public void onClick(boolean status) {
+
+                finish();
 
             }
         });
@@ -919,4 +719,416 @@ public class DetectorActivity extends CameraActivity implements OnImageAvailable
     }
 
 
+    private void unzipUpdateToCache() {
+        ZipInputStream zipIs = new ZipInputStream(getResources().openRawResource(R.raw.face_model));
+        ZipEntry ze = null;
+
+
+        try {
+
+            while ((ze = zipIs.getNextEntry()) != null) {
+                if (ze.getName().equals("face_mv2_ssd_quant_8bit.tflite")) {
+                    FileOutputStream fout = new FileOutputStream(getExternalFilesDir("Data") + "/face_mv2_ssd_quant_8bit.tflite");
+
+                    byte[] buffer = new byte[1024];
+                    int length = 0;
+
+                    while ((length = zipIs.read(buffer)) > 0) {
+                        fout.write(buffer, 0, length);
+                    }
+                    zipIs.closeEntry();
+                    fout.close();
+                }
+            }
+            zipIs.close();
+
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+
+
+    }
+
+
+    private void process(Bitmap bitmap, Bitmap faceCroped) {
+        Mat mat = new Mat();
+
+        uniformBitmap = bitmap;
+        facebitmap = faceCroped;
+        Bitmap bmp32 = bitmap.copy(Bitmap.Config.ARGB_8888, true);
+        Utils.bitmapToMat(bmp32, mat);
+        Mat normalMat = detectColor(mat);
+
+        if (lower_h == 170 && lower_s == 100 && upper_h == 180 && upper_s == 255) {
+            Mat lowerMat = detectLowerColor(mat);
+
+            mattoLowerarry(normalMat, lowerMat);
+        } else {
+            matToIntArray(normalMat);
+        }
+
+    }
+
+    private int[] mattoLowerarry(Mat normalMat, Mat lowerMat) {
+
+        MatOfInt rgb = new MatOfInt(CvType.CV_32S);
+        normalMat.convertTo(rgb, CvType.CV_32S);
+        int[] rgba = new int[(int) (rgb.total() * rgb.channels())];
+        rgb.get(0, 0, rgba);
+
+        MatOfInt lowerrgd = new MatOfInt(CvType.CV_32S);
+        lowerMat.convertTo(lowerrgd, CvType.CV_32S);
+        int[] lowerrgba = new int[(int) (lowerrgd.total() * lowerrgd.channels())];
+
+        int total_pixle_sum = 0;
+
+        int[] total_array = add(rgba, lowerrgba);
+
+        for (int i = 0; i < total_array.length; i++) {
+            total_pixle_sum = total_pixle_sum + rgba[i];
+        }
+
+        total_pixle_sum = total_pixle_sum / 255;
+        int total_chanels = normalMat.width() * normalMat.height();
+        double result = Double.parseDouble(String.valueOf(total_pixle_sum)) / Double.parseDouble(String.valueOf(total_chanels));
+
+
+        Log.e("result", "--" + result);
+        if (result > 0.70) {
+
+            unitform_status = true;
+            uniform_process = true;
+            final_process = true;
+        } else {
+
+            unitform_status = false;
+            uniform_process = true;
+
+            final_process = true;
+        }
+
+
+        return rgba;
+
+
+    }
+
+
+    public static int[] add(int[] first, int[] second) {
+        int length = first.length < second.length ? first.length : second.length;
+        int[] result = new int[length];
+        for (int i = 0; i < length; i++) {
+            result[i] = first[i] + second[i];
+            if (result[i] > 255) {
+                result[i] = 255;
+            }
+        }
+        return result;
+    }
+
+
+    Mat detectColor(Mat srcImg) {
+        final Mat hsvImage = new Mat();
+        Mat color_range = new Mat();
+        Imgproc.cvtColor(srcImg, hsvImage, Imgproc.COLOR_RGB2HSV);
+        Core.inRange(hsvImage, new Scalar(lower_h, lower_s, 0), new Scalar(upper_h, upper_s, 255), color_range);
+        return color_range;
+    }
+
+    Mat detectLowerColor(Mat srcImg) {
+        final Mat hsvImage = new Mat();
+        Mat color_range = new Mat();
+        Imgproc.cvtColor(srcImg, hsvImage, Imgproc.COLOR_RGB2HSV);
+        Core.inRange(hsvImage, new Scalar(0, 100, 0), new Scalar(5, 255, 255), color_range);
+        return color_range;
+    }
+
+
+    public int[] matToIntArray(Mat mRgba) {
+
+        MatOfInt rgb = new MatOfInt(CvType.CV_32S);
+        mRgba.convertTo(rgb, CvType.CV_32S);
+        int[] rgba = new int[(int) (rgb.total() * rgb.channels())];
+        rgb.get(0, 0, rgba);
+        int total_pixle_sum = 0;
+
+        for (int i = 0; i < rgba.length; i++) {
+            total_pixle_sum = total_pixle_sum + rgba[i];
+        }
+        total_pixle_sum = total_pixle_sum / 255;
+        int total_chanels = mRgba.width() * mRgba.height();
+        double result = Double.parseDouble(String.valueOf(total_pixle_sum)) / Double.parseDouble(String.valueOf(total_chanels));
+        if (result > 0.70) {
+
+            unitform_status = true;
+            uniform_process = true;
+            final_process = true;
+        } else {
+
+            unitform_status = false;
+            uniform_process = true;
+            final_process = true;
+        }
+
+
+//        if (uniform_process) {
+//
+//            countDownTimer.cancel();
+//
+//
+//            Intent intent;
+//            if (eye_blink) {
+//                setOutPut();
+//            } else {
+//
+//                uniform_process = false;
+//                unitform_status = false;
+//                eye_blink = false;
+//                smileProbabality = -1;
+//                final_process = false;
+//                intent = new Intent(DetectorActivity.this, ResultActivity.class);
+//                startActivity(intent);
+//            }
+//
+//            if (countDownTimer != null) {
+//                countDownTimer.cancel();
+//            }
+//            if (repeatCountDowntimer != null) {
+//                repeatCountDowntimer.cancel();
+//            }
+//        }
+
+
+        return rgba;
+    }
+
+
+    public static int getDominantColor(Bitmap bitmap) {
+        Bitmap newBitmap = Bitmap.createScaledBitmap(bitmap, 1, 1, true);
+        final int color = newBitmap.getPixel(0, 0);
+        newBitmap.recycle();
+        return color;
+    }
+
+    public void initializeTimerTask() {
+
+
+        Log.e("timer_start", "----");
+
+        countDownTimer = new CountDownTimer(5000, 1000) {
+            @Override
+            public void onTick(long millisUntilFinished) {
+
+
+                long remain = millisUntilFinished / 1000;
+
+
+                Log.e("timer_start", String.valueOf(remain));
+
+                runOnUiThread(new Runnable() {
+                    @Override
+                    public void run() {
+
+                        if (eye_blink && uniform_process && eye_detection_need) {
+
+                            hideblinkMessage();
+                            countDownTimer.cancel();
+                            Intent intent;
+                            if (eye_blink && eye_detection_need) {
+                                setOutPut(1);
+                            } else {
+
+                                uniform_process = false;
+                                unitform_status = false;
+                                eye_blink = false;
+                                smileProbabality = -1;
+
+                                callBlankFragment();
+
+//                                intent = new Intent(DetectorActivity.this, ResultActivity.class);
+//
+//                                intent.putExtras(input_bundle);
+//                                startActivity(intent);
+//
+//                                finish();
+                            }
+
+
+                        } else {
+
+
+                            if (!eye_detection_need && uniform_process) {
+
+                                if (uniform_detection_need && uniform_process) {
+                                    setOutPut(2);
+                                } else {
+                                    setOutPut(3);
+                                }
+
+                            }
+
+
+                        }
+
+
+                        if (eye_blink) {
+
+                            hideblinkMessage();
+                        } else if (!eye_blink && eye_detection_need) {
+                            showBlinkMessage();
+                        }
+
+                    }
+                });
+
+
+            }
+
+            @Override
+            public void onFinish() {
+
+                Intent intent;
+
+                if (eye_detection_need) {
+                    if (eye_blink) {
+                        setOutPut(4);
+                    } else {
+
+                        uniform_process = false;
+                        unitform_status = false;
+                        eye_blink = false;
+                        smileProbabality = -1;
+                        if (final_process) {
+
+                            callBlankFragment();
+//                            intent = new Intent(DetectorActivity.this, ResultActivity.class);
+//                            intent.putExtras(input_bundle);
+//                            startActivity(intent);
+//
+//                            finish();
+                        }
+                    }
+                } else if (!eye_detection_need) {
+                    setOutPut(5);
+                }
+
+            }
+        };
+
+        countDownTimer.start();
+    }
+
+
+    private void hideblinkMessage() {
+        runOnUiThread(new Runnable() {
+            @Override
+            public void run() {
+                eye_tooltip.setText("");
+            }
+        });
+    }
+
+    private void showBlinkMessage() {
+        runOnUiThread(new Runnable() {
+            @Override
+            public void run() {
+                eye_tooltip.setText("Please blink eyes");
+            }
+        });
+    }
+
+    private void speechwarning() {
+        TextSpeech textSpeech = new TextSpeech(DetectorActivity.this.getApplication());
+
+        textSpeech.play("Please blink eyes");
+    }
+
+
+    private void setOutPut(int position) {
+
+
+        Log.e("position", "--" + position);
+
+        Intent output = new Intent();
+
+        Bundle bundle = new Bundle();
+
+        int uniform_o_p = 0;
+        int smil_o_p = 0;
+        int eye_blink_o_p = 0;
+
+        if (unitform_status) {
+            uniform_o_p = 1;
+        }
+
+        if (smileProbabality < 0.4) {
+            smil_o_p = 0;
+        } else if (smileProbabality > 0.4 && smileProbabality < 0.6) {
+            smil_o_p = 1;
+        } else if (smileProbabality > 0.6) {
+            smil_o_p = 2;
+        }
+
+        if (eye_blink) {
+            eye_blink_o_p = 1;
+        }
+
+        if (uniform_detection_need) {
+            bundle.putInt("shirt_color", uniform_o_p);
+        }
+        if (smile_detection_need) {
+            bundle.putInt("face_mode", smil_o_p);
+        }
+        if (eye_detection_need) {
+            bundle.putInt("eye_blink", eye_blink_o_p);
+        }
+
+
+        bundle.putParcelable("face", cropCopyBitmap);
+        output.putExtras(bundle);
+        setResult(RESULT_OK, output);
+
+
+        if (eye_blink) {
+            user_image.setImageBitmap(cropCopyBitmap);
+
+
+        }
+
+
+
+        user_name.setTextColor(Color.BLACK);
+        user_name.setText(eye_blink_o_p + "/" + uniform_o_p);
+
+        callBlankFragment();
+
+        Handler handler = new Handler();
+
+        Runnable runnable = new Runnable() {
+            @Override
+            public void run() {
+
+                eye_blink = false;
+                uniform_process = false;
+
+                user_image.setImageBitmap(null);
+                user_name.setText("");
+
+                unitform_status = false;
+                if (countDownTimer != null) {
+                    countDownTimer.cancel();
+                }
+                setFragment();
+            }
+        };
+
+
+        handler.postDelayed(runnable, 3000);
+
+        Log.e("setOutPut", "----");
+//        finish();
+
+    }
+
+//
 }

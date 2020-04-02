@@ -16,13 +16,6 @@ import android.util.Log;
 import com.app.detection.BuildConfig;
 
 
-/**
- * @author Mustafa Ferhan Akman
- *         <p/>
- *         Create a simple and more understandable Android logs.
- * @date 21.06.2012
- */
-
 public class DebugLog {
 
     static String className;

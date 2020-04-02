@@ -1,18 +1,3 @@
-/*
- * Copyright 2019 The TensorFlow Authors. All Rights Reserved.
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *       http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- */
 
 package com.app.detection;
 
@@ -45,18 +30,16 @@ import android.view.View;
 import android.view.WindowManager;
 import android.widget.CompoundButton;
 import android.widget.FrameLayout;
+import android.widget.ImageView;
+import android.widget.LinearLayout;
 import android.widget.TextView;
 import android.widget.Toast;
 
 import androidx.appcompat.app.AppCompatActivity;
-import androidx.appcompat.widget.Toolbar;
-import androidx.recyclerview.widget.LinearLayoutManager;
-import androidx.recyclerview.widget.RecyclerView;
 
 import com.app.detection.customview.NointernetDialog;
 import com.app.detection.env.ImageUtils;
 import com.app.detection.env.Logger;
-
 
 import org.opencv.android.BaseLoaderCallback;
 import org.opencv.android.LoaderCallbackInterface;
@@ -65,19 +48,12 @@ import org.opencv.android.OpenCVLoader;
 import java.nio.ByteBuffer;
 
 
-
-public abstract class CameraActivity extends AppCompatActivity
-        implements OnImageAvailableListener,
-        Camera.PreviewCallback,
-        CompoundButton.OnCheckedChangeListener,
-        View.OnClickListener {
+public abstract class CameraActivity extends AppCompatActivity implements OnImageAvailableListener, Camera.PreviewCallback, CompoundButton.OnCheckedChangeListener, View.OnClickListener, DummyFragment.ClickRetry {
     private static final Logger LOGGER = new Logger();
 
     private static final int PERMISSIONS_REQUEST = 1;
 
     private static final String PERMISSION_CAMERA = Manifest.permission.CAMERA;
-    private static final String PERMISSION_STORAGE = Manifest.permission.WRITE_EXTERNAL_STORAGE;
-    private static final String PERMISSION_STORAGE1 = Manifest.permission.READ_EXTERNAL_STORAGE;
     protected int previewWidth = 0;
     protected int previewHeight = 0;
     protected RectF boundingRectf;
@@ -94,16 +70,15 @@ public abstract class CameraActivity extends AppCompatActivity
     private Runnable postInferenceCallback;
     private Runnable imageConverter;
 
+
     public static final String TAG = CameraActivity.class.getSimpleName();
 
-    //    protected TextView frameValueTextView, cropValueTextView, inferenceTimeTextView;
-//    protected ImageView bottomSheetArrowImageView;
-//    private ImageView plusImageView, minusImageView;
-//    private SwitchCompat apiSwitchCompat;
-    private TextView threadsTextView;
     FrameLayout frameLayout;
     public TextView warning_text;
-    public RecyclerView recyclerView;
+    public LinearLayout result_view;
+
+    public TextView user_name, eye_tooltip;
+    public ImageView user_image, originial_tv, cropped_iv;
 
     NointernetDialog nointernetDialog;
 
@@ -111,6 +86,8 @@ public abstract class CameraActivity extends AppCompatActivity
         OpenCVLoader.initDebug();
     }
 
+    Handler result_handler;
+    Runnable result_runnable;
 
 
     @Override
@@ -120,102 +97,72 @@ public abstract class CameraActivity extends AppCompatActivity
         getWindow().addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
 
         setContentView(R.layout.activity_camera);
-        Toolbar toolbar = findViewById(R.id.toolbar);
-        setSupportActionBar(toolbar);
-        getSupportActionBar().setDisplayShowTitleEnabled(false);
 
         frameLayout = findViewById(R.id.container);
+        result_view = findViewById(R.id.result_view);
+        user_name = findViewById(R.id.user_name);
+        user_image = findViewById(R.id.result_iv);
+        originial_tv = findViewById(R.id.originial_tv);
+        cropped_iv = findViewById(R.id.cropped_iv);
+        eye_tooltip = findViewById(R.id.eyeTooltip);
 
 
-        recyclerView = findViewById(R.id.image_list);
+        result_handler = new Handler();
+
+        result_runnable = new Runnable() {
+            @Override
+            public void run() {
+
+                user_name.setText("");
+                result_view.setVisibility(View.GONE);
+            }
+        };
+
 
         warning_text = findViewById(R.id.warning_text);
 
-        recyclerView.setLayoutManager(new LinearLayoutManager(this));
-
-        recyclerView.setHasFixedSize(true);
         if (hasPermission()) {
 
             if (isNetworkAvailable()) {
                 setFragment();
             } else {
-                show_no_connection();
+                showNoConnectionDailog();
             }
 
         } else {
             requestPermission();
         }
 
-        threadsTextView = findViewById(R.id.threads);
-//        plusImageView = findViewById(R.id.plus);
-//        minusImageView = findViewById(R.id.minus);
-//        apiSwitchCompat = findViewById(R.id.api_info_switch);
-//        bottomSheetLayout = findViewById(R.id.bottom_sheet_layout);
-//        gestureLayout = findViewById(R.id.gesture_layout);
-////        sheetBehavior = BottomSheetBehavior.from(bottomSheetLayout);
-//        bottomSheetArrowImageView = findViewById(R.id.bottom_sheet_arrow);
-
-//        ViewTreeObserver vto = gestureLayout.getViewTreeObserver();
-//        vto.addOnGlobalLayoutListener(
-//                new ViewTreeObserver.OnGlobalLayoutListener() {
-//                    @Override
-//                    public void onGlobalLayout() {
-//                        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.JELLY_BEAN) {
-//                            gestureLayout.getViewTreeObserver().removeGlobalOnLayoutListener(this);
-//                        } else {
-//                            gestureLayout.getViewTreeObserver().removeOnGlobalLayoutListener(this);
-//                        }
-//                        //                int width = bottomSheetLayout.getMeasuredWidth();
-//                        int height = gestureLayout.getMeasuredHeight();
-//
-////                        sheetBehavior.setPeekHeight(height);
-//                    }
-//                });
-//
-//        sheetBehavior.setBottomSheetCallback(
-//                new BottomSheetBehavior.BottomSheetCallback() {
-//                    @Override
-//                    public void onStateChanged(@NonNull View bottomSheet, int newState) {
-//                        switch (newState) {
-//                            case BottomSheetBehavior.STATE_HIDDEN:
-//                                break;
-//                            case BottomSheetBehavior.STATE_EXPANDED: {
-//                                bottomSheetArrowImageView.setImageResource(R.drawable.icn_chevron_down);
-//                            }
-//                            break;
-//                            case BottomSheetBehavior.STATE_COLLAPSED: {
-//                                bottomSheetArrowImageView.setImageResource(R.drawable.icn_chevron_up);
-//                            }
-//                            break;
-//                            case BottomSheetBehavior.STATE_DRAGGING:
-//                                break;
-//                            case BottomSheetBehavior.STATE_SETTLING:
-//                                bottomSheetArrowImageView.setImageResource(R.drawable.icn_chevron_up);
-//                                break;
-//                        }
-//                    }
-//
-//                    @Override
-//                    public void onSlide(@NonNull View bottomSheet, float slideOffset) {
-//                    }
-//                });
-//
-//        frameValueTextView = findViewById(R.id.frame_info);
-//        cropValueTextView = findViewById(R.id.crop_info);
-//        inferenceTimeTextView = findViewById(R.id.inference_info);
-
-//        apiSwitchCompat.setOnCheckedChangeListener(this);
-
-//        plusImageView.setOnClickListener(this);
-//        minusImageView.setOnClickListener(this);
     }
 
-    private void show_no_connection() {
+    private void showNoConnectionDailog() {
 
-        nointernetDialog = new NointernetDialog(CameraActivity.this);
+        nointernetDialog = new NointernetDialog(CameraActivity.this, new NointernetDialog.NointerntInterface() {
+            @Override
+            public void onClick(boolean status) {
 
+                if (status) {
+                    if (isNetworkConnected()) {
+                        nointernetDialog.dismiss();
+                    }
+                } else {
+
+                    nointernetDialog.dismiss();
+                    finish();
+                }
+
+            }
+        });
+        nointernetDialog.setCanceledOnTouchOutside(false);
         nointernetDialog.show();
     }
+
+    private boolean isNetworkConnected() {
+        ConnectivityManager cm = (ConnectivityManager) getSystemService(Context.CONNECTIVITY_SERVICE);
+
+        return cm.getActiveNetworkInfo() != null && cm.getActiveNetworkInfo().isConnected();
+    }
+
 
     protected int[] getRgbBytes() {
         imageConverter.run();
@@ -230,9 +177,7 @@ public abstract class CameraActivity extends AppCompatActivity
         return yuvBytes[0];
     }
 
-    /**
-     * Callback for android.hardware.Camera API
-     */
+
     @Override
     public void onPreviewFrame(final byte[] bytes, final Camera camera) {
         if (isProcessingFrame) {
@@ -362,7 +307,7 @@ public abstract class CameraActivity extends AppCompatActivity
 
         if (!OpenCVLoader.initDebug()) {
             Log.e(TAG, "Internal OpenCV library not found. Using OpenCV Manager for initialization");
-            OpenCVLoader.initAsync(OpenCVLoader.OPENCV_VERSION, this, mLoaderCallBack);
+            OpenCVLoader.initDebug();
         } else {
             Log.e(TAG, "OpenCV library found inside package. Using it!");
             mLoaderCallBack.onManagerConnected(LoaderCallbackInterface.SUCCESS);
@@ -507,7 +452,12 @@ public abstract class CameraActivity extends AppCompatActivity
 
         Log.e("cameraid", "" + cameraId);
 
+
+//        result_handler.postDelayed(result_runnable, 3000);
+
         Fragment fragment;
+
+        Log.e("useCamera2API", "--" + useCamera2API);
         if (useCamera2API) {
             CameraConnectionFragment camera2Fragment = CameraConnectionFragment.newInstance(new CameraConnectionFragment.ConnectionCallback() {
                                                                                                 @Override
@@ -542,7 +492,6 @@ public abstract class CameraActivity extends AppCompatActivity
                     Log.e("270", "--" + rotation);
                 }
             }, this, getLayoutId(), getDesiredPreviewFrameSize());
-//            fragment = new LegacyCameraConnectionFragment(this, getLayoutId(), getDesiredPreviewFrameSize());
             fragment = legacyCameraConnectionFragment;
 
         }
@@ -556,6 +505,9 @@ public abstract class CameraActivity extends AppCompatActivity
         DummyFragment dummyFragment = new DummyFragment();
 
         getFragmentManager().beginTransaction().replace(R.id.container, dummyFragment).commit();
+
+
+        dummyFragment.CallRetryInterfaceMethod(CameraActivity.this);
 
     }
 
@@ -604,23 +556,7 @@ public abstract class CameraActivity extends AppCompatActivity
 
     @Override
     public void onClick(View v) {
-        if (v.getId() == R.id.plus) {
-            String threads = threadsTextView.getText().toString().trim();
-            int numThreads = Integer.parseInt(threads);
-            if (numThreads >= 9) return;
-            numThreads++;
-            threadsTextView.setText(String.valueOf(numThreads));
-            setNumThreads(numThreads);
-        } else if (v.getId() == R.id.minus) {
-            String threads = threadsTextView.getText().toString().trim();
-            int numThreads = Integer.parseInt(threads);
-            if (numThreads == 1) {
-                return;
-            }
-            numThreads--;
-            threadsTextView.setText(String.valueOf(numThreads));
-            setNumThreads(numThreads);
-        }
+
     }
 
     protected void showFrameInfo(String frameInfo) {
@@ -658,5 +594,14 @@ public abstract class CameraActivity extends AppCompatActivity
         ConnectivityManager connectivityManager = (ConnectivityManager) getSystemService(Context.CONNECTIVITY_SERVICE);
         NetworkInfo activeNetworkInfo = connectivityManager.getActiveNetworkInfo();
         return activeNetworkInfo != null && activeNetworkInfo.isConnected();
+    }
+
+    @Override
+    public void onRetry(boolean status) {
+
+        if (status) {
+            setFragment();
+        }
+
     }
 }

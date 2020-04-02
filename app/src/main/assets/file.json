@@ -1,0 +1,10 @@
+{
+  "config": {
+    "package_name": "com.app.example.fd",
+    "bundle-version": "0.1.1",
+    "kind": "software",
+    "title": "code",
+    "user_id": "5d0a8ef72ad9c04228140739",
+    "type_of_sdk": "active_liveness"
+  }
+}
